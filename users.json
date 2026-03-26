@@ -1,0 +1,44 @@
+{
+  "users": [
+    {
+      "id": "usr_001",
+      "username": "admin",
+      "password": "admin1234",
+      "name": "System Admin",
+      "role": "admin",
+      "avatar": "SA",
+      "active": true,
+      "createdAt": "2026-01-01"
+    },
+    {
+      "id": "usr_002",
+      "username": "sales",
+      "password": "sales123",
+      "name": "Sales Team",
+      "role": "sales",
+      "avatar": "ST",
+      "active": true,
+      "createdAt": "2026-01-01"
+    },
+    {
+      "id": "usr_003",
+      "username": "operations",
+      "password": "ops123",
+      "name": "Operations Team",
+      "role": "operations",
+      "avatar": "OT",
+      "active": true,
+      "createdAt": "2026-01-01"
+    },
+    {
+      "id": "usr_004",
+      "username": "management",
+      "password": "mgmt123",
+      "name": "Management",
+      "role": "management",
+      "avatar": "MG",
+      "active": true,
+      "createdAt": "2026-01-01"
+    }
+  ]
+}

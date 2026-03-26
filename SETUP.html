@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FleetCRM — Setup Guide</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0a0c0f;--surface:#111318;--surface2:#181c23;
+  --border:rgba(255,255,255,0.07);--accent:#38d9f5;--accent2:#7b6fff;
+  --text:#e8eaf0;--muted:#5a6070;--success:#3dffa0;--warn:#ffb347;--danger:#ff5f6d;
+  --mono:'DM Mono',monospace;--display:'Syne',sans-serif;
+}
+body{font-family:var(--mono);background:var(--bg);color:var(--text);
+  padding:48px 24px 80px;line-height:1.7}
+body::before{content:'';position:fixed;inset:0;
+  background-image:linear-gradient(rgba(56,217,245,0.025) 1px,transparent 1px),
+  linear-gradient(90deg,rgba(56,217,245,0.025) 1px,transparent 1px);
+  background-size:44px 44px;pointer-events:none;z-index:0}
+
+.wrap{position:relative;z-index:1;max-width:820px;margin:0 auto}
+
+/* Hero */
+.hero{text-align:center;margin-bottom:56px;padding-bottom:40px;
+  border-bottom:1px solid var(--border)}
+.hero .mark{width:64px;height:64px;border-radius:16px;
+  background:linear-gradient(135deg,var(--accent2),var(--accent));
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--display);font-size:24px;font-weight:800;color:#0a0c0f;
+  margin:0 auto 20px;box-shadow:0 0 40px rgba(56,217,245,0.2)}
+.hero h1{font-family:var(--display);font-size:32px;font-weight:800;
+  letter-spacing:-0.5px;margin-bottom:8px}
+.hero h1 span{color:var(--accent)}
+.hero p{color:var(--muted);font-size:13px}
+.badge-row{display:flex;justify-content:center;gap:8px;margin-top:16px;flex-wrap:wrap}
+.hb{padding:4px 12px;border-radius:100px;font-size:10px;letter-spacing:1px;
+  text-transform:uppercase}
+.hb-cyan{background:rgba(56,217,245,0.1);border:1px solid rgba(56,217,245,0.25);color:var(--accent)}
+.hb-purple{background:rgba(123,111,255,0.1);border:1px solid rgba(123,111,255,0.25);color:var(--accent2)}
+.hb-green{background:rgba(61,255,160,0.1);border:1px solid rgba(61,255,160,0.25);color:var(--success)}
+
+/* File map */
+.file-map{background:var(--surface);border:1px solid var(--border);
+  border-radius:14px;padding:26px;margin-bottom:36px}
+.file-map h2{font-family:var(--display);font-size:16px;font-weight:700;
+  margin-bottom:18px;padding-bottom:12px;border-bottom:1px solid var(--border)}
+.file-tree{font-size:12px;line-height:2}
+.ft-folder{color:var(--muted)}
+.ft-file{color:var(--text)}
+.ft-file span{color:var(--accent);margin-left:8px;font-size:10px;
+  letter-spacing:0.5px;opacity:0.7}
+.ft-new{color:var(--success)}
+.ft-new span{color:var(--success)}
+
+/* Steps */
+.step-block{margin-bottom:32px}
+.step-num{display:inline-flex;align-items:center;gap:10px;
+  font-family:var(--display);font-size:13px;font-weight:700;
+  color:var(--accent);margin-bottom:12px;letter-spacing:-0.2px}
+.step-num .n{width:26px;height:26px;border-radius:6px;
+  background:rgba(56,217,245,0.12);border:1px solid rgba(56,217,245,0.25);
+  display:flex;align-items:center;justify-content:center;
+  font-size:11px;font-weight:700;flex-shrink:0}
+.step-block p{font-size:13px;color:var(--muted);margin-bottom:10px;line-height:1.7}
+.step-block p strong{color:var(--text)}
+
+/* Code blocks */
+pre{background:var(--surface2);border:1px solid var(--border);
+  border-radius:10px;padding:18px 20px;overflow-x:auto;
+  font-size:12px;line-height:1.7;margin:10px 0 16px;position:relative}
+pre .copy-btn{position:absolute;top:10px;right:12px;background:rgba(56,217,245,0.1);
+  border:1px solid rgba(56,217,245,0.2);border-radius:6px;color:var(--accent);
+  font-family:var(--mono);font-size:10px;padding:4px 10px;cursor:pointer;transition:all 0.15s}
+pre .copy-btn:hover{background:rgba(56,217,245,0.2)}
+.k{color:var(--accent2)}.s{color:var(--success)}.c{color:var(--muted)}
+
+/* Info / warning boxes */
+.info-box{border-radius:10px;padding:14px 18px;margin:14px 0;font-size:12px;line-height:1.6}
+.info-box.tip{background:rgba(56,217,245,0.06);border:1px solid rgba(56,217,245,0.2);color:var(--accent)}
+.info-box.warn{background:rgba(255,179,71,0.07);border:1px solid rgba(255,179,71,0.25);color:var(--warn)}
+.info-box.danger{background:rgba(255,95,109,0.07);border:1px solid rgba(255,95,109,0.25);color:var(--danger)}
+.info-box strong{display:block;margin-bottom:4px;font-size:11px;letter-spacing:1px;text-transform:uppercase}
+
+/* Tables */
+.ref-table{width:100%;border-collapse:collapse;font-size:12px;margin:12px 0}
+.ref-table th{padding:9px 14px;text-align:left;font-size:9px;letter-spacing:1.5px;
+  text-transform:uppercase;color:var(--muted);background:var(--surface2);
+  border-bottom:1px solid var(--border)}
+.ref-table td{padding:10px 14px;border-bottom:1px solid var(--border);color:var(--text);vertical-align:top}
+.ref-table tr:last-child td{border-bottom:none}
+.ref-table .mono{font-family:var(--mono);color:var(--accent);font-size:11px}
+.ref-table .role-badge{display:inline-block;padding:2px 8px;border-radius:4px;
+  font-size:10px;background:rgba(123,111,255,0.1);color:var(--accent2)}
+
+/* Dividers */
+.section-divider{font-size:9px;letter-spacing:3px;text-transform:uppercase;
+  color:var(--muted);display:flex;align-items:center;gap:12px;margin:40px 0 28px}
+.section-divider::before,.section-divider::after{content:'';flex:1;height:1px;background:var(--border)}
+
+/* Checklist */
+.checklist{list-style:none;margin:12px 0}
+.checklist li{display:flex;align-items:flex-start;gap:10px;padding:7px 0;
+  font-size:13px;color:var(--muted);border-bottom:1px solid var(--border)}
+.checklist li:last-child{border-bottom:none}
+.checklist li::before{content:'○';color:var(--muted2);flex-shrink:0;margin-top:1px}
+.checklist li strong{color:var(--text)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- Hero -->
+  <div class="hero">
+    <div class="mark">FC</div>
+    <h1>Fleet<span>CRM</span> — Setup Guide</h1>
+    <p>Complete step-by-step instructions to go from downloaded files to a live system</p>
+    <div class="badge-row">
+      <span class="hb hb-cyan">6 HTML/JS Files</span>
+      <span class="hb hb-purple">1 Apps Script</span>
+      <span class="hb hb-green">5 Google Sheet Tabs</span>
+    </div>
+  </div>
+
+  <!-- File map -->
+  <div class="file-map">
+    <h2>📁 Your CRM Folder — All Files</h2>
+    <div class="file-tree">
+      <div class="ft-folder">📁 FleetCRM/</div>
+      <div style="padding-left:20px">
+        <div class="ft-new">├── index.html <span>← Login page — open this in browser</span></div>
+        <div class="ft-new">├── dashboard.html <span>← Main dashboard</span></div>
+        <div class="ft-file">├── sales_leads.html <span>← Sales leads form + table</span></div>
+        <div class="ft-file">├── vehicle_job_order.html <span>← 9-step job order form</span></div>
+        <div class="ft-new">├── inventory.html <span>← SIMs &amp; Trackers inventory</span></div>
+        <div class="ft-new">├── crm-core.js <span>← Shared auth + nav (do not rename)</span></div>
+        <div class="ft-new">└── Code.gs <span>← Copy this into Google Apps Script</span></div>
+      </div>
+    </div>
+    <div class="info-box tip" style="margin-top:16px">
+      <strong>⚠ Important</strong>
+      All 6 HTML/JS files must be in the <strong>same folder</strong>. Do not rename <code>crm-core.js</code>.
+    </div>
+  </div>
+
+  <!-- STEP 1 -->
+  <div class="section-divider">Step 1 — Google Sheet</div>
+  <div class="step-block">
+    <div class="step-num"><span class="n">1</span> Create &amp; configure your Google Sheet</div>
+    <p>Open <strong>sheets.google.com</strong> and create a new spreadsheet. Name it anything (e.g. <strong>FleetCRM Data</strong>).</p>
+    <p>Then go to <strong>Extensions → Apps Script</strong>, delete the default code, and paste the entire contents of <strong>Code.gs</strong>.</p>
+    <p>In the Apps Script editor, select the <strong>setupAllSheets</strong> function from the dropdown and click <strong>▶ Run</strong>. This automatically creates all 5 sheet tabs with the correct headers in one click.</p>
+    <div class="info-box tip">
+      <strong>✓ Tabs created by setupAllSheets()</strong>
+      Sales Leads &nbsp;·&nbsp; Job Orders &nbsp;·&nbsp; Trackers &nbsp;·&nbsp; SIMs &nbsp;·&nbsp; Assignments
+    </div>
+    <div class="info-box warn">
+      <strong>⚠ If you already have tabs</strong>
+      Make sure your existing tab names match exactly (case-sensitive). You can change them in the <code>TABS</code> object at the top of Code.gs.
+    </div>
+  </div>
+
+  <!-- STEP 2 -->
+  <div class="section-divider">Step 2 — Deploy Apps Script</div>
+  <div class="step-block">
+    <div class="step-num"><span class="n">2</span> Publish as a Web App</div>
+    <p>In the Apps Script editor:</p>
+    <ul style="padding-left:20px;font-size:13px;color:var(--muted);line-height:2.2">
+      <li>Click <strong style="color:var(--text)">Deploy → New deployment</strong></li>
+      <li>Click the ⚙ gear icon → select <strong style="color:var(--text)">Web app</strong></li>
+      <li>Set <strong style="color:var(--text)">Execute as:</strong> Me</li>
+      <li>Set <strong style="color:var(--text)">Who has access:</strong> Anyone</li>
+      <li>Click <strong style="color:var(--text)">Deploy</strong> and copy the URL shown</li>
+    </ul>
+    <p>The URL looks like:</p>
+    <pre>https://script.google.com/macros/s/AKfycb.......XXXX/exec</pre>
+    <div class="info-box warn">
+      <strong>⚠ Every time you edit Code.gs</strong>
+      You must create a <strong>New Deployment</strong> (not edit existing) to push changes live.
+      The URL changes each time — update crm-core.js accordingly.
+    </div>
+  </div>
+
+  <!-- STEP 3 -->
+  <div class="section-divider">Step 3 — Connect the URL</div>
+  <div class="step-block">
+    <div class="step-num"><span class="n">3</span> Paste your URL into crm-core.js</div>
+    <p>Open <strong>crm-core.js</strong> in any text editor (Notepad, VS Code, etc.) and replace the placeholder on line 6:</p>
+    <pre><button class="copy-btn" onclick="copyCode(this)">Copy</button><span class="c">// ✏️ PASTE YOUR GOOGLE APPS SCRIPT URL HERE</span>
+<span class="k">const</span> CRM_SCRIPT_URL = <span class="s">"https://script.google.com/macros/s/YOUR_ID/exec"</span>;</pre>
+    <p>Save the file. <strong>That's the only file you need to edit.</strong> All 5 HTML pages read the URL from crm-core.js automatically.</p>
+  </div>
+
+  <!-- STEP 4 -->
+  <div class="section-divider">Step 4 — Run Locally</div>
+  <div class="step-block">
+    <div class="step-num"><span class="n">4</span> Start your local server</div>
+    <p>Open a terminal / command prompt <strong>in the FleetCRM folder</strong> and run:</p>
+    <pre><button class="copy-btn" onclick="copyCode(this)">Copy</button>python -m http.server 8080</pre>
+    <p>Then open your browser and go to:</p>
+    <pre><button class="copy-btn" onclick="copyCode(this)">Copy</button>http://localhost:8080/index.html</pre>
+    <div class="info-box tip">
+      <strong>💡 Tip — open the right folder first</strong>
+      <code>cd "C:\path\to\your\FleetCRM folder"</code> then run the python command. The folder shown before <code>&gt;</code> in your terminal must be the same folder as your HTML files.
+    </div>
+  </div>
+
+  <!-- Logins Reference -->
+  <div class="section-divider">Login Credentials</div>
+  <div class="step-block">
+    <div class="step-num"><span class="n">5</span> Default users — change passwords in crm-core.js</div>
+    <table class="ref-table">
+      <thead><tr><th>Role</th><th>Username</th><th>Password</th><th>Can Access</th></tr></thead>
+      <tbody>
+        <tr><td><span class="role-badge">Admin</span></td><td class="mono">admin</td><td class="mono">admin123</td><td style="color:var(--muted)">Everything</td></tr>
+        <tr><td><span class="role-badge">Sales</span></td><td class="mono">sales</td><td class="mono">sales123</td><td style="color:var(--muted)">Dashboard + Leads only</td></tr>
+        <tr><td><span class="role-badge">Operations</span></td><td class="mono">operations</td><td class="mono">ops123</td><td style="color:var(--muted)">Dashboard + Job Orders + Inventory</td></tr>
+        <tr><td><span class="role-badge">Management</span></td><td class="mono">management</td><td class="mono">mgmt123</td><td style="color:var(--muted)">View all — no editing</td></tr>
+      </tbody>
+    </table>
+    <p>To change passwords or add users, edit the <code>CRM_USERS</code> array in <strong>crm-core.js</strong>.</p>
+  </div>
+
+  <!-- Sheet reference -->
+  <div class="section-divider">Google Sheet Tab Reference</div>
+  <div class="step-block">
+    <div class="step-num"><span class="n">6</span> What gets written to each tab</div>
+    <table class="ref-table">
+      <thead><tr><th>Tab Name</th><th>Written By</th><th>Key Fields</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="mono">Sales Leads</td>
+          <td style="color:var(--muted)">Sales Leads form</td>
+          <td style="color:var(--muted);font-size:11px">leadId, customerName, contact, status, source, salesPerson…</td>
+        </tr>
+        <tr>
+          <td class="mono">Job Orders</td>
+          <td style="color:var(--muted)">Job Order form</td>
+          <td style="color:var(--muted);font-size:11px">date, invoiceNumber, customer, vehicle, imei, serial…</td>
+        </tr>
+        <tr>
+          <td class="mono">Trackers</td>
+          <td style="color:var(--muted)">Inventory → Stock In</td>
+          <td style="color:var(--muted);font-size:11px">entryId, imei, model, supplier, qty, status, assignedTo…</td>
+        </tr>
+        <tr>
+          <td class="mono">SIMs</td>
+          <td style="color:var(--muted)">Inventory → Stock In</td>
+          <td style="color:var(--muted);font-size:11px">entryId, simNumber, iccid, network, plan, status, installedIn…</td>
+        </tr>
+        <tr>
+          <td class="mono">Assignments</td>
+          <td style="color:var(--muted)">Inventory → Assign SIM</td>
+          <td style="color:var(--muted);font-size:11px">assignId, trackerIMEI, simNumber, vehicle, assignedBy…</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Apps Script actions reference -->
+  <div class="section-divider">Apps Script Actions Reference</div>
+  <div class="step-block">
+    <div class="step-num"><span class="n">7</span> All GET and POST actions supported</div>
+    <table class="ref-table">
+      <thead><tr><th>Method</th><th>Action</th><th>Parameters</th><th>Returns</th></tr></thead>
+      <tbody>
+        <tr><td style="color:var(--accent)">GET</td><td class="mono">getLeads</td><td style="color:var(--muted)">tab=Sales Leads</td><td style="color:var(--muted)">{ data: [...] }</td></tr>
+        <tr><td style="color:var(--accent)">GET</td><td class="mono">getJobOrders</td><td style="color:var(--muted)">tab=Job Orders</td><td style="color:var(--muted)">{ data: [...] }</td></tr>
+        <tr><td style="color:var(--accent)">GET</td><td class="mono">getInventory</td><td style="color:var(--muted)">tab=Trackers or SIMs</td><td style="color:var(--muted)">{ data: [...], summary: {...} }</td></tr>
+        <tr><td style="color:var(--accent)">GET</td><td class="mono">getDashboard</td><td style="color:var(--muted)">—</td><td style="color:var(--muted)">{ leads, jobs, trackers, sims }</td></tr>
+        <tr><td style="color:var(--accent2)">POST</td><td class="mono">stockIn</td><td style="color:var(--muted)">sheetTab + item fields</td><td style="color:var(--muted)">{ status: "success" }</td></tr>
+        <tr><td style="color:var(--accent2)">POST</td><td class="mono">stockOut</td><td style="color:var(--muted)">sheetTab, id, date, removedBy</td><td style="color:var(--muted)">{ updated: id }</td></tr>
+        <tr><td style="color:var(--accent2)">POST</td><td class="mono">assign</td><td style="color:var(--muted)">trackerIMEI, simNumber, vehicle</td><td style="color:var(--muted)">{ assigned: "..." }</td></tr>
+        <tr><td style="color:var(--accent2)">POST</td><td class="mono">(default)</td><td style="color:var(--muted)">sheetTab + any fields</td><td style="color:var(--muted)">Appends row to sheet</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Troubleshooting -->
+  <div class="section-divider">Troubleshooting</div>
+  <div class="step-block">
+    <div class="step-num"><span class="n">8</span> Common issues and fixes</div>
+    <table class="ref-table">
+      <thead><tr><th>Problem</th><th>Fix</th></tr></thead>
+      <tbody>
+        <tr>
+          <td style="color:var(--danger)">404 on localhost</td>
+          <td style="color:var(--muted)">Run <code>cd</code> into the exact folder containing your HTML files before <code>python -m http.server 8080</code></td>
+        </tr>
+        <tr>
+          <td style="color:var(--danger)">Data not appearing in Sheet</td>
+          <td style="color:var(--muted)">Make sure you re-deployed after editing Code.gs. Check the URL in crm-core.js matches the latest deployment URL.</td>
+        </tr>
+        <tr>
+          <td style="color:var(--danger)">Sheet tab not found error</td>
+          <td style="color:var(--muted)">Run <code>setupAllSheets()</code> from the Apps Script editor, or check tab names match the <code>TABS</code> object in Code.gs exactly.</td>
+        </tr>
+        <tr>
+          <td style="color:var(--danger)">Redirected to login on every page</td>
+          <td style="color:var(--muted)">The browser must support <code>sessionStorage</code>. Ensure you're accessing via <code>http://localhost:8080</code> not via <code>file:///</code>.</td>
+        </tr>
+        <tr>
+          <td style="color:var(--danger)">Inventory table won't load</td>
+          <td style="color:var(--muted)">GET requests only work if the Apps Script deployment is set to <strong>Who has access: Anyone</strong>. Check your deployment settings.</td>
+        </tr>
+        <tr>
+          <td style="color:var(--danger)">Can't assign SIM — dropdowns empty</td>
+          <td style="color:var(--muted)">Click <strong>Refresh</strong> on both the Trackers and SIMs tabs first so the data is loaded into memory before opening the Assign modal.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Quick checklist -->
+  <div class="section-divider">Go-Live Checklist</div>
+  <div class="step-block" style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:24px">
+    <ul class="checklist">
+      <li><strong>All 7 files are in the same folder</strong> (index.html, dashboard.html, sales_leads.html, vehicle_job_order.html, inventory.html, crm-core.js, Code.gs)</li>
+      <li><strong>Code.gs pasted into Apps Script</strong> and saved</li>
+      <li><strong>setupAllSheets() run</strong> — 5 tabs created in Google Sheet</li>
+      <li><strong>Web App deployed</strong> — Execute as: Me, Access: Anyone</li>
+      <li><strong>CRM_SCRIPT_URL updated</strong> in crm-core.js with your deployment URL</li>
+      <li><strong>Python server running</strong> from the correct folder</li>
+      <li><strong>Opened via http://localhost:8080/index.html</strong> (not file:///)</li>
+      <li><strong>Test login</strong> with admin / admin123</li>
+      <li><strong>Test Stock In</strong> — add a Tracker, verify row appears in Google Sheet</li>
+      <li><strong>Test Lead form</strong> — submit a lead, verify row appears in Sales Leads tab</li>
+    </ul>
+  </div>
+
+</div>
+
+<script>
+function copyCode(btn) {
+  const pre = btn.parentElement;
+  const text = pre.innerText.replace('Copy','').trim();
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent = 'Copied!';
+    setTimeout(() => btn.textContent = 'Copy', 1500);
+  });
+}
+</script>
+</body>
+</html>

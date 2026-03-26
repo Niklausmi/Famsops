@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Users — FleetCRM</title>
+<script src="crm-core.js"></script>
+<script>document.head.insertAdjacentHTML('beforeend', CRM_STYLE);</script>
+<style>
+.user-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;margin-bottom:28px}
+.user-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;
+  padding:20px;position:relative;transition:border-color 0.2s}
+.user-card:hover{border-color:var(--border-hi)}
+.user-card.inactive{opacity:0.45}
+.uc-top{display:flex;align-items:center;gap:14px;margin-bottom:14px}
+.uc-avatar{width:44px;height:44px;border-radius:10px;flex-shrink:0;
+  background:linear-gradient(135deg,var(--accent2),var(--accent));
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--display);font-size:15px;font-weight:800;color:#0a0c0f}
+.uc-name{font-family:var(--display);font-size:14px;font-weight:700;color:var(--text)}
+.uc-user{font-size:11px;color:var(--muted);margin-top:2px}
+.uc-meta{display:flex;align-items:center;justify-content:space-between;
+  padding-top:12px;border-top:1px solid var(--border)}
+.uc-actions{display:flex;gap:6px}
+.uc-status{position:absolute;top:14px;right:14px;font-size:9px;
+  letter-spacing:1.5px;text-transform:uppercase}
+
+/* Modal */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:200;
+  display:none;align-items:center;justify-content:center;padding:20px}
+.modal-overlay.open{display:flex}
+.modal{background:var(--surface);border:1px solid var(--border-hi);
+  border-radius:16px;padding:30px;width:100%;max-width:460px;
+  animation:fadeUp 0.25s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.modal-head{display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:22px;padding-bottom:14px;border-bottom:1px solid var(--border)}
+.modal-head h3{font-family:var(--display);font-size:16px;font-weight:700}
+.modal-close{background:none;border:none;color:var(--muted);font-size:18px;
+  cursor:pointer;padding:4px;border-radius:6px;transition:color 0.15s;line-height:1}
+.modal-close:hover{color:var(--text)}
+.modal-btns{display:flex;justify-content:flex-end;gap:10px;margin-top:20px;
+  padding-top:16px;border-top:1px solid var(--border)}
+
+/* JSON export box */
+.json-box{background:var(--surface2);border:1px solid var(--border);border-radius:10px;
+  padding:16px;font-size:11px;line-height:1.7;overflow:auto;max-height:320px;
+  white-space:pre;color:var(--text);font-family:var(--mono)}
+.json-key{color:var(--accent2)}
+.json-str{color:var(--success)}
+.json-bool-true{color:var(--accent)}
+.json-bool-false{color:var(--danger)}
+
+/* Info banner */
+.info-banner{padding:12px 16px;background:rgba(56,217,245,0.06);
+  border:1px solid rgba(56,217,245,0.2);border-radius:10px;
+  font-size:12px;color:var(--muted);margin-bottom:22px;line-height:1.6}
+.info-banner strong{color:var(--accent);display:block;margin-bottom:3px;
+  font-size:10px;letter-spacing:1.5px;text-transform:uppercase}
+</style>
+</head>
+<body>
+<div class="crm-main">
+  <div class="crm-topbar">
+    <div>
+      <div class="page-title">User Management</div>
+      <div class="page-subtitle">Admin only — manage CRM access</div>
+    </div>
+    <div class="topbar-right">
+      <div class="topbar-time" id="clock"></div>
+      <button class="btn btn-solid btn-sm" onclick="openAddModal()">＋ Add User</button>
+    </div>
+  </div>
+
+  <div class="crm-content fade-up">
+
+    <div class="info-banner">
+      <strong>ℹ How user management works</strong>
+      Users are stored in <code>users.json</code> in your CRM folder. When you add or edit a user below,
+      the updated JSON is generated — copy it and save it over your <code>users.json</code> file,
+      then restart your local server. Passwords are stored as plain text in the JSON file —
+      keep the file secure and do not share it publicly.
+    </div>
+
+    <!-- User cards -->
+    <div class="user-grid" id="userGrid">
+      <div style="color:var(--muted);font-size:12px;padding:20px">Loading users…</div>
+    </div>
+
+    <!-- Updated JSON output -->
+    <div class="card" id="jsonOutputCard" style="display:none">
+      <div class="section-head">
+        <div class="section-icon si-cyan">📄</div>
+        <div>
+          <h2>Updated users.json</h2>
+          <p>Copy this and save it as <strong>users.json</strong> in your CRM folder, then refresh the page</p>
+        </div>
+      </div>
+      <div class="json-box" id="jsonOutput"></div>
+      <div style="display:flex;gap:10px;margin-top:14px">
+        <button class="btn btn-solid" onclick="copyJson()">📋 Copy JSON</button>
+        <button class="btn btn-ghost" onclick="document.getElementById('jsonOutputCard').style.display='none'">Dismiss</button>
+      </div>
+      <div class="success-flash" id="copyOk">✓ Copied to clipboard!</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Add / Edit Modal -->
+<div class="modal-overlay" id="userModal">
+  <div class="modal">
+    <div class="modal-head">
+      <h3 id="modalTitle">Add New User</h3>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+
+    <input type="hidden" id="editUserId">
+
+    <div class="grid-2">
+      <div class="field">
+        <label>Full Name</label>
+        <input id="f-name" placeholder="e.g. Ahmad Ali">
+      </div>
+      <div class="field">
+        <label>Username</label>
+        <input id="f-username" placeholder="login username" autocomplete="off">
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <input type="password" id="f-password" placeholder="set a password" autocomplete="new-password">
+      </div>
+      <div class="field">
+        <label>Role</label>
+        <select id="f-role">
+          <option value="">Select role…</option>
+          <option value="admin">Admin — full access</option>
+          <option value="sales">Sales — leads only</option>
+          <option value="operations">Operations — jobs + inventory</option>
+          <option value="management">Management — view only</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Avatar Initials</label>
+        <input id="f-avatar" placeholder="e.g. AA" maxlength="2" style="text-transform:uppercase">
+      </div>
+      <div class="field">
+        <label>Status</label>
+        <select id="f-active">
+          <option value="true">Active</option>
+          <option value="false">Inactive</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="error-banner" id="modalErr"></div>
+
+    <div class="modal-btns">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-solid" onclick="saveUser()">Save User</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const _u = crmGuard('users');
+crmNav('users');
+startClock(document.getElementById('clock'));
+
+let usersData = [];
+
+// ── Load users from users.json ──
+async function loadUsers() {
+  try {
+    const json = await loadUsersJson();
+    usersData  = json.users || [];
+    renderCards(usersData);
+  } catch(e) {
+    document.getElementById('userGrid').innerHTML =
+      '<div style="color:var(--danger);font-size:12px;padding:20px">⚠ Could not load users.json — make sure the file is in your CRM folder.</div>';
+  }
+}
+
+function renderCards(users) {
+  const grid = document.getElementById('userGrid');
+  if (!users.length) {
+    grid.innerHTML = '<div class="empty-state"><div class="ei">👥</div><p>No users found</p></div>';
+    return;
+  }
+  grid.innerHTML = users.map(u => {
+    const active = u.active !== false;
+    const av = (u.avatar || u.name.slice(0,2)).toUpperCase();
+    return `
+    <div class="user-card${active?'':' inactive'}">
+      <div class="uc-status">
+        <span class="badge ${active?'badge-available':'badge-lost'}">${active?'Active':'Inactive'}</span>
+      </div>
+      <div class="uc-top">
+        <div class="uc-avatar">${av}</div>
+        <div>
+          <div class="uc-name">${u.name}</div>
+          <div class="uc-user">@${u.username}</div>
+        </div>
+      </div>
+      <div class="uc-meta">
+        <span class="badge badge-${u.role}">${u.role}</span>
+        <div class="uc-actions">
+          <button class="btn btn-ghost btn-sm" onclick="openEditModal('${u.id}')">Edit</button>
+          <button class="btn btn-danger btn-sm" onclick="toggleActive('${u.id}')">${active?'Deactivate':'Activate'}</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── Add modal ──
+function openAddModal() {
+  document.getElementById('modalTitle').textContent = 'Add New User';
+  document.getElementById('editUserId').value = '';
+  ['f-name','f-username','f-password','f-avatar'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('f-role').value   = '';
+  document.getElementById('f-active').value = 'true';
+  document.getElementById('modalErr').style.display = 'none';
+  document.getElementById('userModal').classList.add('open');
+}
+
+// ── Edit modal ──
+function openEditModal(id) {
+  const u = usersData.find(u => u.id === id);
+  if (!u) return;
+  document.getElementById('modalTitle').textContent = 'Edit User';
+  document.getElementById('editUserId').value  = u.id;
+  document.getElementById('f-name').value      = u.name;
+  document.getElementById('f-username').value  = u.username;
+  document.getElementById('f-password').value  = u.password;
+  document.getElementById('f-role').value      = u.role;
+  document.getElementById('f-avatar').value    = u.avatar || '';
+  document.getElementById('f-active').value    = String(u.active !== false);
+  document.getElementById('modalErr').style.display = 'none';
+  document.getElementById('userModal').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('userModal').classList.remove('open');
+}
+
+// ── Save (add or update) ──
+function saveUser() {
+  const name     = document.getElementById('f-name').value.trim();
+  const username = document.getElementById('f-username').value.trim().toLowerCase();
+  const password = document.getElementById('f-password').value;
+  const role     = document.getElementById('f-role').value;
+  const avatar   = document.getElementById('f-avatar').value.trim().toUpperCase().slice(0,2) ||
+                   name.slice(0,2).toUpperCase();
+  const active   = document.getElementById('f-active').value === 'true';
+  const editId   = document.getElementById('editUserId').value;
+  const errEl    = document.getElementById('modalErr');
+
+  errEl.style.display = 'none';
+
+  if (!name)     { showErr('Full name is required');     return; }
+  if (!username) { showErr('Username is required');      return; }
+  if (!password) { showErr('Password is required');      return; }
+  if (!role)     { showErr('Please select a role');      return; }
+
+  // Check duplicate username (ignore self on edit)
+  const dup = usersData.find(u => u.username === username && u.id !== editId);
+  if (dup) { showErr('Username "' + username + '" is already taken'); return; }
+
+  if (editId) {
+    // Update existing
+    const idx = usersData.findIndex(u => u.id === editId);
+    if (idx >= 0) {
+      usersData[idx] = { ...usersData[idx], name, username, password, role, avatar, active };
+    }
+  } else {
+    // New user
+    const newUser = {
+      id:        'usr_' + Date.now().toString(36),
+      username, password, name, role, avatar,
+      active:    true,
+      createdAt: new Date().toISOString().split('T')[0],
+    };
+    usersData.push(newUser);
+  }
+
+  renderCards(usersData);
+  closeModal();
+  showJsonOutput();
+}
+
+// ── Toggle active ──
+function toggleActive(id) {
+  const u = usersData.find(u => u.id === id);
+  if (!u) return;
+
+  // Prevent deactivating yourself
+  const me = crmCurrentUser();
+  if (me && me.id === id) { alert('You cannot deactivate your own account.'); return; }
+
+  u.active = !(u.active !== false);
+  renderCards(usersData);
+  showJsonOutput();
+}
+
+// ── Show updated JSON ──
+function showJsonOutput() {
+  const obj  = { users: usersData };
+  const raw  = JSON.stringify(obj, null, 2);
+  // Syntax highlight
+  const highlighted = raw
+    .replace(/("[\w]+")\s*:/g, '<span class="json-key">$1</span>:')
+    .replace(/:\s*(".*?")/g, ': <span class="json-str">$1</span>')
+    .replace(/:\s*(true)/g,  ': <span class="json-bool-true">$1</span>')
+    .replace(/:\s*(false)/g, ': <span class="json-bool-false">$1</span>');
+
+  document.getElementById('jsonOutput').innerHTML = highlighted;
+  const card = document.getElementById('jsonOutputCard');
+  card.style.display = 'block';
+  card.scrollIntoView({ behavior:'smooth', block:'start' });
+}
+
+async function copyJson() {
+  const raw = JSON.stringify({ users: usersData }, null, 2);
+  await navigator.clipboard.writeText(raw);
+  const ok = document.getElementById('copyOk');
+  ok.style.display = 'block';
+  setTimeout(() => ok.style.display = 'none', 2000);
+}
+
+function showErr(msg) {
+  const el = document.getElementById('modalErr');
+  el.textContent = '⚠ ' + msg;
+  el.style.display = 'block';
+}
+
+// Close modal on overlay click
+document.getElementById('userModal').addEventListener('click', e => {
+  if (e.target === document.getElementById('userModal')) closeModal();
+});
+
+loadUsers();
+</script>
+</body>
+</html>

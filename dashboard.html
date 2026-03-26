@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard — FleetCRM</title>
+<script src="crm-core.js"></script>
+<script>document.head.insertAdjacentHTML('beforeend', CRM_STYLE);</script>
+<style>
+.dash-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:26px}
+.dash-bottom{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.quick-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.qa-btn{background:var(--surface2);border:1px solid var(--border);border-radius:10px;
+  padding:16px;cursor:pointer;transition:all 0.2s;text-decoration:none;display:block}
+.qa-btn:hover{border-color:var(--border-hi);background:rgba(255,255,255,0.03);transform:translateY(-2px)}
+.qa-btn .qa-icon{font-size:22px;margin-bottom:8px}
+.qa-btn .qa-label{font-size:11px;color:var(--text);letter-spacing:0.3px;font-weight:500}
+.qa-btn .qa-sub{font-size:10px;color:var(--muted);margin-top:3px}
+.funnel-bar{margin-bottom:10px}
+.funnel-bar-label{display:flex;justify-content:space-between;margin-bottom:5px}
+.funnel-bar-label span:first-child{font-size:11px;color:var(--muted)}
+.funnel-bar-track{height:6px;background:var(--surface2);border-radius:3px;overflow:hidden}
+.funnel-bar-fill{height:100%;border-radius:3px;transition:width 0.8s ease}
+.inv-snap-row{display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:1px solid var(--border)}
+.inv-snap-row:last-child{border-bottom:none}
+.inv-snap-name{font-size:12px;color:var(--text);font-weight:500}
+.inv-snap-meta{font-size:10px;color:var(--muted);margin-top:2px}
+.inv-bar-wrap{width:80px;height:5px;background:var(--surface3);border-radius:3px;overflow:hidden;margin-right:8px}
+.inv-bar-fill{height:100%;border-radius:3px}
+.activity-item{display:flex;align-items:flex-start;gap:12px;padding:12px 0;border-bottom:1px solid var(--border)}
+.activity-item:last-child{border-bottom:none}
+.ai-dot{width:8px;height:8px;border-radius:50%;margin-top:3px;flex-shrink:0}
+.ai-text{font-size:12px;color:var(--text);line-height:1.4}
+.ai-time{font-size:10px;color:var(--muted);margin-top:2px}
+@media(max-width:900px){.dash-grid{grid-template-columns:1fr 1fr}.dash-bottom{grid-template-columns:1fr}}
+@media(max-width:500px){.dash-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="crm-main">
+  <div class="crm-topbar">
+    <div>
+      <div class="page-title">Dashboard</div>
+      <div class="page-subtitle" id="welcomeMsg">Loading…</div>
+    </div>
+    <div class="topbar-right">
+      <div class="topbar-time" id="clock"></div>
+    </div>
+  </div>
+  <div class="crm-content fade-up">
+    <div class="dash-grid">
+      <div class="stat-tile t-cyan"><div class="tile-label">Total Leads</div><div class="tile-val" id="st-leads">—</div><div class="tile-sub">All time</div><div class="tile-icon">🎯</div></div>
+      <div class="stat-tile t-purple"><div class="tile-label">Job Orders</div><div class="tile-val" id="st-jobs">—</div><div class="tile-sub">All time</div><div class="tile-icon">📋</div></div>
+      <div class="stat-tile t-green"><div class="tile-label">Trackers Available</div><div class="tile-val" id="st-trackers">—</div><div class="tile-sub">In stock</div><div class="tile-icon">📡</div></div>
+      <div class="stat-tile t-warn"><div class="tile-label">SIMs Available</div><div class="tile-val" id="st-sims">—</div><div class="tile-sub">Active SIMs</div><div class="tile-icon">💳</div></div>
+    </div>
+    <div class="dash-bottom">
+      <div class="card">
+        <div class="section-head"><div class="section-icon si-cyan">⚡</div><div><h2>Quick Actions</h2><p>Jump to key tasks</p></div></div>
+        <div class="quick-actions" id="quickActions"><div style="grid-column:span 2;color:var(--muted);font-size:12px;padding:20px 0;text-align:center">Loading…</div></div>
+      </div>
+      <div class="card">
+        <div class="section-head"><div class="section-icon si-purple">🕐</div><div><h2>Recent Activity</h2><p>Latest system events</p></div></div>
+        <div id="activityFeed">
+          <div class="activity-item"><div class="ai-dot" style="background:var(--accent)"></div><div><div class="ai-text">FleetCRM loaded successfully</div><div class="ai-time">Just now</div></div></div>
+          <div class="activity-item"><div class="ai-dot" style="background:var(--muted)"></div><div><div class="ai-text">Connect your Google Sheet to see live activity</div><div class="ai-time">—</div></div></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="section-head"><div class="section-icon si-purple">📊</div><div><h2>Lead Conversion Funnel</h2><p>Status breakdown across all leads</p></div></div>
+        <div id="funnelBars"><div class="empty-state"><div class="ei">📊</div><p>Waiting for Sheet data…</p></div></div>
+      </div>
+      <div class="card">
+        <div class="section-head"><div class="section-icon si-warn">📦</div><div><h2>Inventory Snapshot</h2><p>Current stock levels</p></div></div>
+        <div id="invSnapshot"><div class="empty-state"><div class="ei">📦</div><p>Waiting for Sheet data…</p></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+const _u = crmGuard('dashboard');
+crmNav('dashboard');
+startClock(document.getElementById('clock'));
+const user = crmCurrentUser();
+if (user) {
+  document.getElementById('welcomeMsg').textContent = 'Welcome back, ' + user.name + '  ·  ' +
+    new Date().toLocaleDateString('en-PK',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+}
+const ALL_ACTIONS = [
+  {icon:'🎯',label:'New Lead',     sub:'Forward to sales',   href:'sales_leads.html',       roles:['admin','sales']},
+  {icon:'📋',label:'New Job Order',sub:'Start installation', href:'vehicle_job_order.html', roles:['admin','operations']},
+  {icon:'📦',label:'Stock In',     sub:'Add to inventory',   href:'inventory.html',         roles:['admin','operations']},
+  {icon:'📊',label:'All Leads',    sub:'View leads table',   href:'sales_leads.html',       roles:['admin','sales','management']},
+  {icon:'🔍',label:'Job Orders',   sub:'Browse all orders',  href:'vehicle_job_order.html', roles:['admin','operations','management']},
+  {icon:'💳',label:'SIM Inventory',sub:'Manage SIM cards',   href:'inventory.html',         roles:['admin','operations','management']},
+  {icon:'👥',label:'Manage Users', sub:'Add / edit users',   href:'users.html',             roles:['admin']},
+];
+const actions = ALL_ACTIONS.filter(a => user && a.roles.includes(user.role));
+document.getElementById('quickActions').innerHTML = actions.slice(0,6).map(a =>
+  `<a href="${a.href}" class="qa-btn"><div class="qa-icon">${a.icon}</div><div class="qa-label">${a.label}</div><div class="qa-sub">${a.sub}</div></a>`
+).join('') || '<div style="color:var(--muted);font-size:12px;padding:20px 0;text-align:center;grid-column:span 2">No actions available.</div>';
+
+async function loadStats() {
+  try {
+    const leads = await crmGet({action:'getLeads',tab:'Sales Leads'});
+    if (leads.data) {
+      document.getElementById('st-leads').textContent = leads.data.length;
+      const d = leads.data, max = d.length||1;
+      const statuses=['New','Warm','Hot','Closed','Lost'];
+      const colors=['var(--accent)','var(--warn)','var(--danger)','var(--success)','var(--muted)'];
+      document.getElementById('funnelBars').innerHTML = statuses.map((s,i)=>{
+        const cnt=d.filter(r=>r.status===s).length, pct=Math.round(cnt/max*100);
+        return `<div class="funnel-bar"><div class="funnel-bar-label"><span>${s}</span><span style="color:${colors[i]};font-weight:500">${cnt}</span></div><div class="funnel-bar-track"><div class="funnel-bar-fill" style="width:${pct}%;background:${colors[i]}"></div></div></div>`;
+      }).join('');
+    }
+  } catch{}
+  try {
+    const tr=await crmGet({action:'getInventory',tab:'Trackers'});
+    const si=await crmGet({action:'getInventory',tab:'SIMs'});
+    if(tr.summary) document.getElementById('st-trackers').textContent=tr.summary.available??'—';
+    if(si.summary) document.getElementById('st-sims').textContent=si.summary.available??'—';
+    const items=[
+      ...(tr.data||[]).filter(r=>r.status==='Available').slice(0,3).map(i=>({name:i.imei||'Tracker',sub:i.model||'Tracker',qty:i.qty||1})),
+      ...(si.data||[]).filter(r=>r.status==='Available').slice(0,3).map(i=>({name:i.simNumber||'SIM',sub:i.network||'SIM',qty:i.qty||1})),
+    ];
+    if(items.length) document.getElementById('invSnapshot').innerHTML=items.map(i=>{
+      const qty=Number(i.qty)||1, col=qty>10?'var(--success)':qty>3?'var(--warn)':'var(--danger)', pct=Math.min(100,qty*5);
+      return `<div class="inv-snap-row"><div><div class="inv-snap-name">${i.name}</div><div class="inv-snap-meta">${i.sub}</div></div><div style="display:flex;align-items:center;gap:8px"><div class="inv-bar-wrap"><div class="inv-bar-fill" style="width:${pct}%;background:${col}"></div></div><span style="font-size:12px;color:${col};font-family:var(--display);font-weight:700;width:24px;text-align:right">${qty}</span></div></div>`;
+    }).join('');
+  } catch{}
+  try {
+    const jobs=await crmGet({action:'getJobOrders',tab:'Job Orders'});
+    if(jobs.data) document.getElementById('st-jobs').textContent=jobs.data.length;
+  } catch{}
+}
+loadStats();
+</script>
+</body>
+</html>

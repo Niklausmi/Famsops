@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Inventory — FleetCRM</title>
+<script src="crm-core.js"></script>
+</head>
+<body>
+<script>document.head.insertAdjacentHTML('beforeend', CRM_STYLE); const _gu = crmGuard('inventory');</script>
+<style>
+.inv-tabs{display:flex;gap:6px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:5px;margin-bottom:24px}
+.inv-tab{flex:1;padding:10px 16px;border:none;border-radius:8px;background:transparent;color:var(--muted);font-family:var(--mono);font-size:11px;letter-spacing:1px;text-transform:uppercase;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;justify-content:center;gap:8px}
+.inv-tab .cnt{font-family:var(--display);font-size:13px;font-weight:700}
+.inv-tab.active-t{background:rgba(56,217,245,0.1);color:var(--accent);border:1px solid rgba(56,217,245,0.2)}
+.inv-tab.active-s{background:rgba(123,111,255,0.1);color:var(--accent2);border:1px solid rgba(123,111,255,0.2)}
+.inv-tab:hover:not(.active-t):not(.active-s){color:var(--text)}
+.inv-panel{display:none}.inv-panel.active{display:block}
+.stock-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px}
+.sc{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px 18px;position:relative;overflow:hidden}
+.sc::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+.sc.c1::before{background:linear-gradient(90deg,var(--accent),transparent)}
+.sc.c2::before{background:linear-gradient(90deg,var(--success),transparent)}
+.sc.c3::before{background:linear-gradient(90deg,var(--warn),transparent)}
+.sc.c4::before{background:linear-gradient(90deg,var(--accent2),transparent)}
+.sc .sc-label{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.sc .sc-val{font-family:var(--display);font-size:24px;font-weight:800;line-height:1}
+.sc .sc-icon{position:absolute;right:14px;top:50%;transform:translateY(-50%);font-size:20px;opacity:0.2}
+.form-panel{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:26px;margin-bottom:22px}
+.form-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;align-items:end}
+.act-btn{background:none;border:1px solid var(--border);border-radius:6px;color:var(--muted);font-family:var(--mono);font-size:10px;padding:5px 10px;cursor:pointer;transition:all 0.15s;white-space:nowrap}
+.act-btn:hover{border-color:var(--border-hi);color:var(--text)}
+.act-btn.a-edit:hover{border-color:rgba(56,217,245,0.4);color:var(--accent)}
+.act-btn.a-link:hover{border-color:rgba(123,111,255,0.4);color:var(--accent2)}
+.act-btn.a-unlink:hover{border-color:rgba(255,179,71,0.4);color:var(--warn)}
+.act-btn.a-out:hover{border-color:rgba(255,95,109,0.4);color:var(--danger)}
+/* Checkbox bulk */
+.cb-row{display:flex;align-items:center;gap:8px}
+.cb-row input[type=checkbox]{width:15px;height:15px;accent-color:var(--accent);cursor:pointer}
+.bulk-bar{display:none;align-items:center;gap:10px;padding:10px 14px;background:rgba(56,217,245,0.06);border:1px solid rgba(56,217,245,0.2);border-radius:8px;margin-bottom:12px;flex-wrap:wrap}
+.bulk-bar.visible{display:flex}
+.bulk-bar span{font-size:11px;color:var(--accent);flex:1}
+/* Modals */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:200;display:none;align-items:center;justify-content:center;padding:20px;overflow-y:auto}
+.modal-overlay.open{display:flex}
+.modal{background:var(--surface);border:1px solid var(--border-hi);border-radius:16px;padding:28px;width:100%;max-width:540px;animation:fadeUp 0.25s ease;margin:auto}
+.modal-lg{max-width:700px}
+.modal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;padding-bottom:14px;border-bottom:1px solid var(--border)}
+.modal-head h3{font-family:var(--display);font-size:16px;font-weight:700}
+.modal-close{background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;padding:4px 8px;border-radius:6px;line-height:1;transition:color 0.15s}
+.modal-close:hover{color:var(--text)}
+.modal-btns{display:flex;justify-content:flex-end;gap:10px;margin-top:20px;padding-top:14px;border-top:1px solid var(--border)}
+/* Detail card in modal */
+.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:0}
+.detail-row{padding:9px 0;border-bottom:1px solid var(--border);display:flex;flex-direction:column;gap:2px}
+.detail-row:nth-child(odd){padding-right:16px}
+.detail-row:nth-child(even){padding-left:16px;border-left:1px solid var(--border)}
+.detail-row .dl{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted)}
+.detail-row .dv{font-size:12px;color:var(--text);word-break:break-all}
+.status-pills-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px}
+.sp{padding:5px 12px;border-radius:100px;border:1px solid var(--border);background:var(--surface2);color:var(--muted);font-family:var(--mono);font-size:10px;cursor:pointer;transition:all 0.15s;letter-spacing:0.5px}
+.sp:hover{color:var(--text);border-color:var(--border-hi)}
+.sp.sel-available{background:rgba(56,217,245,0.1);border-color:rgba(56,217,245,0.4);color:var(--accent)}
+.sp.sel-assigned{background:rgba(123,111,255,0.1);border-color:rgba(123,111,255,0.4);color:var(--accent2)}
+.sp.sel-faulty{background:rgba(255,179,71,0.1);border-color:rgba(255,179,71,0.4);color:var(--warn)}
+.sp.sel-removed{background:rgba(255,95,109,0.1);border-color:rgba(255,95,109,0.4);color:var(--danger)}
+.sp.sel-installed{background:rgba(61,255,160,0.1);border-color:rgba(61,255,160,0.4);color:var(--success)}
+.tbl-controls{display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;align-items:center}
+.search-inp{flex:1;min-width:180px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--mono);font-size:12px;padding:8px 13px;outline:none;transition:all 0.2s}
+.search-inp:focus{border-color:rgba(56,217,245,0.4)}
+.search-inp::placeholder{color:var(--muted)}
+.flt-sel{background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--muted);font-family:var(--mono);font-size:11px;padding:8px 30px 8px 13px;outline:none;cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath fill='%235a6070' d='M5 6L0 0h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 11px center}
+.flt-sel option{background:#1a1e26}
+.assign-info-box{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px 14px;margin-bottom:12px;font-size:11px;color:var(--muted);line-height:1.6}
+.assign-info-box strong{color:var(--text);display:block;margin-bottom:3px}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+@media(max-width:768px){.stock-cards{grid-template-columns:1fr 1fr}.form-row{grid-template-columns:1fr 1fr}}
+@media(max-width:480px){.stock-cards{grid-template-columns:1fr}.form-row{grid-template-columns:1fr}}
+</style>
+
+<div class="crm-main">
+  <div class="crm-topbar">
+    <div><div class="page-title">Inventory</div><div class="page-subtitle">SIMs &amp; Trackers — stock, assignment &amp; linking</div></div>
+    <div class="topbar-right"><div class="topbar-time" id="clock"></div></div>
+  </div>
+  <div class="crm-content fade-up">
+
+    <div class="inv-tabs">
+      <button class="inv-tab active-t" id="tab-trackers" onclick="switchInvTab('trackers')">📡 Trackers &nbsp;<span class="cnt" id="tc-cnt">—</span></button>
+      <button class="inv-tab" id="tab-sims" onclick="switchInvTab('sims')">💳 SIMs &nbsp;<span class="cnt" id="sc-cnt">—</span></button>
+    </div>
+
+    <!-- ══ TRACKERS ══ -->
+    <div class="inv-panel active" id="panel-trackers">
+      <div class="stock-cards">
+        <div class="sc c1"><div class="sc-label">Total</div><div class="sc-val" id="t-total-in">—</div><div class="sc-icon">📥</div></div>
+        <div class="sc c2"><div class="sc-label">Available</div><div class="sc-val" id="t-available">—</div><div class="sc-icon">✅</div></div>
+        <div class="sc c4"><div class="sc-label">Assigned</div><div class="sc-val" id="t-assigned">—</div><div class="sc-icon">🔗</div></div>
+        <div class="sc c3"><div class="sc-label">Faulty/Low</div><div class="sc-val" id="t-low">—</div><div class="sc-icon">⚠</div></div>
+      </div>
+      <div class="form-panel">
+        <div class="section-head"><div class="section-icon si-cyan">📥</div><div><h2>Stock In — Tracker</h2><p>Add new trackers to inventory</p></div></div>
+        <div class="form-row">
+          <div class="field"><label>IMEI / Serial</label><input id="t-imei" placeholder="15-digit IMEI"></div>
+          <div class="field"><label>Model / Module</label><input id="t-model" placeholder="e.g. GT06N"></div>
+          <div class="field"><label>Supplier</label><input id="t-supplier" placeholder="Supplier name"></div>
+          <div class="field"><label>Date Received</label><input type="date" id="t-date"></div>
+        </div>
+        <div class="form-row" style="margin-top:4px">
+          <div class="field"><label>Quantity</label><input type="number" id="t-qty" placeholder="1" min="1" value="1"></div>
+          <div class="field"><label>Purchase Price (PKR)</label><input type="number" id="t-price" placeholder="0"></div>
+          <div class="field"><label>Notes</label><input id="t-notes" placeholder="Optional"></div>
+          <div class="field" style="display:flex;align-items:flex-end"><button class="btn btn-solid" style="width:100%" onclick="stockIn('trackers')">＋ Add Stock</button></div>
+        </div>
+        <div class="error-banner" id="t-err"></div>
+        <div class="success-flash" id="t-ok"></div>
+      </div>
+      <div class="card">
+        <div class="section-head"><div class="section-icon si-cyan">📡</div><div><h2>Tracker Inventory</h2><p>Click any row to view full details, edit, or manage linking</p></div></div>
+        <div class="bulk-bar" id="t-bulk-bar">
+          <span id="t-bulk-label">0 selected</span>
+          <select class="flt-sel" id="t-bulk-status"><option value="">Set status…</option><option>Available</option><option>Assigned</option><option>Faulty</option><option>Removed</option></select>
+          <input class="search-inp" id="t-bulk-installer" placeholder="Installer name" style="flex:none;width:160px">
+          <input class="search-inp" id="t-bulk-city" placeholder="City" style="flex:none;width:130px">
+          <button class="btn btn-primary btn-sm" onclick="applyBulk('trackers')">Apply to Selected</button>
+          <button class="btn btn-ghost btn-sm" onclick="clearBulk('trackers')">Clear</button>
+        </div>
+        <div class="tbl-controls">
+          <input class="search-inp" id="t-search" placeholder="Search IMEI, model, supplier…" oninput="filterTrackers()">
+          <select class="flt-sel" id="t-filter" onchange="filterTrackers()"><option value="">All Status</option><option>Available</option><option>Assigned</option><option>Faulty</option><option>Removed</option></select>
+          <button class="btn btn-ghost btn-sm" onclick="loadTrackers()">↻ Refresh</button>
+        </div>
+        <div class="table-wrap">
+          <table><thead><tr>
+            <th><input type="checkbox" id="t-chk-all" onchange="toggleAllCheck('trackers',this.checked)"></th>
+            <th>IMEI / Serial</th><th>Model</th><th>Supplier</th><th>Date In</th><th>Qty</th><th>Price</th><th>Status</th><th>Assigned To</th><th>Installer</th><th>City</th><th>Actions</th>
+          </tr></thead>
+          <tbody id="t-tbody"><tr><td colspan="12" style="text-align:center;padding:40px;color:var(--muted)">Click Refresh to load…</td></tr></tbody></table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ SIMs ══ -->
+    <div class="inv-panel" id="panel-sims">
+      <div class="stock-cards">
+        <div class="sc c1"><div class="sc-label">Total</div><div class="sc-val" id="s-total-in">—</div><div class="sc-icon">📥</div></div>
+        <div class="sc c2"><div class="sc-label">Available</div><div class="sc-val" id="s-available">—</div><div class="sc-icon">✅</div></div>
+        <div class="sc c4"><div class="sc-label">Installed</div><div class="sc-val" id="s-installed">—</div><div class="sc-icon">🔗</div></div>
+        <div class="sc c3"><div class="sc-label">Low Stock</div><div class="sc-val" id="s-low">—</div><div class="sc-icon">⚠</div></div>
+      </div>
+      <div class="form-panel">
+        <div class="section-head"><div class="section-icon si-purple">📥</div><div><h2>Stock In — SIM</h2><p>Add new SIM cards to inventory</p></div></div>
+        <div class="form-row">
+          <div class="field"><label>SIM Number (MSISDN)</label><input id="s-number" placeholder="+92 3XX XXXXXXX"></div>
+          <div class="field"><label>ICCID / Serial</label><input id="s-iccid" placeholder="19–20 digit ICCID"></div>
+          <div class="field"><label>Network</label><select id="s-network"><option value="">Select…</option><option>Jazz</option><option>Zong</option><option>Telenor</option><option>Ufone</option><option>SCO</option></select></div>
+          <div class="field"><label>Package / Plan</label><input id="s-plan" placeholder="e.g. Data 500MB"></div>
+        </div>
+        <div class="form-row" style="margin-top:4px">
+          <div class="field"><label>Quantity</label><input type="number" id="s-qty" placeholder="1" min="1" value="1"></div>
+          <div class="field"><label>Date Received</label><input type="date" id="s-date"></div>
+          <div class="field"><label>Notes</label><input id="s-notes" placeholder="Optional"></div>
+          <div class="field" style="display:flex;align-items:flex-end"><button class="btn btn-solid" style="width:100%;background:linear-gradient(135deg,#7b6fff,#38d9f5)" onclick="stockIn('sims')">＋ Add SIM</button></div>
+        </div>
+        <div class="error-banner" id="s-err"></div>
+        <div class="success-flash" id="s-ok"></div>
+      </div>
+      <div class="card">
+        <div class="section-head"><div class="section-icon si-purple">💳</div><div><h2>SIM Inventory</h2><p>Click any row to view details, edit or manage linking</p></div></div>
+        <div class="bulk-bar" id="s-bulk-bar">
+          <span id="s-bulk-label">0 selected</span>
+          <select class="flt-sel" id="s-bulk-status"><option value="">Set status…</option><option>Available</option><option>Installed</option><option>Inactive</option><option>Removed</option></select>
+          <button class="btn btn-primary btn-sm" onclick="applyBulk('sims')">Apply to Selected</button>
+          <button class="btn btn-ghost btn-sm" onclick="clearBulk('sims')">Clear</button>
+        </div>
+        <div class="tbl-controls">
+          <input class="search-inp" id="s-search" placeholder="Search SIM number, ICCID, network…" oninput="filterSIMs()">
+          <select class="flt-sel" id="s-filter" onchange="filterSIMs()"><option value="">All Status</option><option>Available</option><option>Installed</option><option>Inactive</option><option>Removed</option></select>
+          <button class="btn btn-ghost btn-sm" onclick="loadSIMs()">↻ Refresh</button>
+        </div>
+        <div class="table-wrap">
+          <table><thead><tr>
+            <th><input type="checkbox" id="s-chk-all" onchange="toggleAllCheck('sims',this.checked)"></th>
+            <th>SIM Number</th><th>ICCID</th><th>Network</th><th>Plan</th><th>Date In</th><th>Qty</th><th>Status</th><th>Installed In</th><th>Actions</th>
+          </tr></thead>
+          <tbody id="s-tbody"><tr><td colspan="10" style="text-align:center;padding:40px;color:var(--muted)">Click Refresh to load…</td></tr></tbody></table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ DEVICE DETAIL / EDIT MODAL ══ -->
+<div class="modal-overlay" id="deviceModal">
+  <div class="modal modal-lg">
+    <div class="modal-head">
+      <h3 id="dm-title">Device Details</h3>
+      <button class="modal-close" onclick="closeModal('deviceModal')">✕</button>
+    </div>
+    <div id="dm-body"></div>
+    <div class="modal-btns" id="dm-btns"></div>
+  </div>
+</div>
+
+<!-- ══ ASSIGN / LINK MODAL ══ -->
+<div class="modal-overlay" id="linkModal">
+  <div class="modal">
+    <div class="modal-head">
+      <h3 id="lm-title">🔗 Link SIM to Tracker</h3>
+      <button class="modal-close" onclick="closeModal('linkModal')">✕</button>
+    </div>
+    <div id="lm-body"></div>
+    <div class="error-banner" id="lm-err"></div>
+    <div class="modal-btns" id="lm-btns"></div>
+  </div>
+</div>
+
+<script>
+crmNav('inventory');
+startClock(document.getElementById('clock'));
+['t-date','s-date'].forEach(id=>{ const el=document.getElementById(id); if(el) el.valueAsDate=new Date(); });
+
+let trackersData=[], simsData=[], selectedTrackers=new Set(), selectedSims=new Set();
+
+// ── Tab switch ──
+function switchInvTab(tab){
+  document.querySelectorAll('.inv-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.inv-tab').forEach(b=>b.classList.remove('active-t','active-s'));
+  document.getElementById('panel-'+tab).classList.add('active');
+  document.getElementById('tab-'+tab).classList.add(tab==='trackers'?'active-t':'active-s');
+}
+
+// ── Modal helpers ──
+function closeModal(id){ document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.modal-overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)closeModal(o.id);}));
+
+// ── Stock In ──
+async function stockIn(type){
+  const isT=type==='trackers', p=isT?'t':'s';
+  const errEl=document.getElementById(p+'-err'), okEl=document.getElementById(p+'-ok');
+  errEl.style.display='none'; okEl.style.display='none';
+  const user=crmCurrentUser();
+  const data=isT?{sheetTab:'Trackers',action:'stockIn',imei:document.getElementById('t-imei').value.trim(),model:document.getElementById('t-model').value.trim(),supplier:document.getElementById('t-supplier').value.trim(),dateIn:document.getElementById('t-date').value,qty:document.getElementById('t-qty').value||'1',price:document.getElementById('t-price').value,notes:document.getElementById('t-notes').value,status:'Available',entryId:'TRK-'+Date.now().toString(36).toUpperCase().slice(-6),enteredBy:user?user.name:'Unknown'}:{sheetTab:'SIMs',action:'stockIn',simNumber:document.getElementById('s-number').value.trim(),iccid:document.getElementById('s-iccid').value.trim(),network:document.getElementById('s-network').value,plan:document.getElementById('s-plan').value.trim(),qty:document.getElementById('s-qty').value||'1',dateIn:document.getElementById('s-date').value,notes:document.getElementById('s-notes').value,status:'Available',entryId:'SIM-'+Date.now().toString(36).toUpperCase().slice(-6),enteredBy:user?user.name:'Unknown'};
+  if(isT&&!data.imei){showBanner(errEl,'IMEI is required');return;}
+  if(!isT&&!data.simNumber){showBanner(errEl,'SIM Number is required');return;}
+  try{
+    const res=await crmPost(data);
+    if(res.status==='error') throw new Error(res.message);
+    showBanner(okEl,'✓ Saved to Google Sheet (row '+( res.result?.rowNumber||'')+ ')');
+    ['t-imei','t-model','t-supplier','t-price','t-notes','s-number','s-iccid','s-notes','s-plan'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+    ['t-qty','s-qty'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='1';});
+    const sn=document.getElementById('s-network');if(sn)sn.value='';
+    setTimeout(()=>{okEl.style.display='none';isT?loadTrackers():loadSIMs();},1800);
+  }catch(err){showBanner(errEl,'Failed: '+(err.message||'check connection'));}
+}
+
+function showBanner(el,msg){el.textContent=msg;el.style.display='block';}
+
+// ── Load Trackers ──
+async function loadTrackers(){
+  const tb=document.getElementById('t-tbody');
+  tb.innerHTML='<tr><td colspan="12" style="text-align:center;padding:30px;color:var(--muted)">Loading from Google Sheets…</td></tr>';
+  try{
+    const res=await crmGet({action:'getInventory',tab:'Trackers'});
+    trackersData=res.data||[];
+    renderTrackers(trackersData);
+    const s=res.summary||{};
+    document.getElementById('t-total-in').textContent=s.total??trackersData.length;
+    document.getElementById('t-available').textContent=s.available??'—';
+    document.getElementById('t-assigned').textContent=s.assigned??'—';
+    document.getElementById('t-low').textContent=s.low??'—';
+    document.getElementById('tc-cnt').textContent=trackersData.length;
+    selectedTrackers.clear(); updateBulkBar('trackers');
+  }catch(err){tb.innerHTML=`<tr><td colspan="12" style="text-align:center;padding:30px;color:var(--danger)">⚠ ${err.message||'Could not load'}</td></tr>`;}
+}
+
+function renderTrackers(data){
+  const tb=document.getElementById('t-tbody');
+  if(!data.length){tb.innerHTML='<tr><td colspan="12"><div class="empty-state"><div class="ei">📡</div><p>No trackers yet</p></div></td></tr>';return;}
+  tb.innerHTML=data.map(r=>{
+    const cls=r.status==='Available'?'badge-available':r.status==='Assigned'?'badge-assigned':r.status==='Faulty'?'badge-low':'badge-lost';
+    const chk=selectedTrackers.has(r.imei||r.entryId);
+    return `<tr style="cursor:pointer" ondblclick="openDeviceCard('tracker','${esc(r.imei||r.entryId)}')">
+      <td onclick="event.stopPropagation()"><div class="cb-row"><input type="checkbox" ${chk?'checked':''} onchange="toggleCheck('trackers','${esc(r.imei||r.entryId)}',this.checked)"></div></td>
+      <td><strong>${r.imei||'—'}</strong></td><td>${r.model||'—'}</td><td class="td-muted">${r.supplier||'—'}</td>
+      <td class="td-muted">${r.dateIn||'—'}</td><td>${r.qty||1}</td>
+      <td class="td-muted">${r.price?'PKR '+Number(r.price).toLocaleString():'—'}</td>
+      <td><span class="badge ${cls}">${r.status||'Available'}</span></td>
+      <td class="td-muted" style="max-width:120px;overflow:hidden;text-overflow:ellipsis">${r.assignedTo||'—'}</td>
+      <td class="td-muted">${r.installer||'—'}</td>
+      <td class="td-muted">${r.city||'—'}</td>
+      <td onclick="event.stopPropagation()" style="white-space:nowrap;display:flex;gap:4px;padding:8px 14px">
+        <button class="act-btn a-edit" onclick="openDeviceCard('tracker','${esc(r.imei||r.entryId)}')">Edit</button>
+        ${r.status==='Available'?`<button class="act-btn a-link" onclick="openLinkModal('tracker','${esc(r.imei||r.entryId)}')">Link SIM</button>`:''}
+        ${r.status==='Assigned'?`<button class="act-btn a-unlink" onclick="doDelink('tracker','${esc(r.imei||r.entryId)}')">Delink</button>`:''}
+        <button class="act-btn a-out" onclick="stockOut('trackers','${esc(r.imei||r.entryId)}')">Out</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function filterTrackers(){
+  const q=document.getElementById('t-search').value.toLowerCase(), st=document.getElementById('t-filter').value;
+  renderTrackers(trackersData.filter(r=>(!q||[r.imei,r.model,r.supplier,r.installer,r.city].some(v=>(v||'').toLowerCase().includes(q)))&&(!st||r.status===st)));
+}
+
+// ── Load SIMs ──
+async function loadSIMs(){
+  const tb=document.getElementById('s-tbody');
+  tb.innerHTML='<tr><td colspan="10" style="text-align:center;padding:30px;color:var(--muted)">Loading from Google Sheets…</td></tr>';
+  try{
+    const res=await crmGet({action:'getInventory',tab:'SIMs'});
+    simsData=res.data||[];
+    renderSIMs(simsData);
+    const s=res.summary||{};
+    document.getElementById('s-total-in').textContent=s.total??simsData.length;
+    document.getElementById('s-available').textContent=s.available??'—';
+    document.getElementById('s-installed').textContent=s.assigned??'—';
+    document.getElementById('s-low').textContent=s.low??'—';
+    document.getElementById('sc-cnt').textContent=simsData.length;
+    selectedSims.clear(); updateBulkBar('sims');
+  }catch(err){tb.innerHTML=`<tr><td colspan="10" style="text-align:center;padding:30px;color:var(--danger)">⚠ ${err.message||'Could not load'}</td></tr>`;}
+}
+
+function renderSIMs(data){
+  const tb=document.getElementById('s-tbody');
+  if(!data.length){tb.innerHTML='<tr><td colspan="10"><div class="empty-state"><div class="ei">💳</div><p>No SIMs yet</p></div></td></tr>';return;}
+  tb.innerHTML=data.map(r=>{
+    const cls=r.status==='Available'?'badge-available':r.status==='Installed'?'badge-assigned':r.status==='Inactive'?'badge-low':'badge-lost';
+    const chk=selectedSims.has(r.simNumber||r.entryId);
+    return `<tr style="cursor:pointer" ondblclick="openDeviceCard('sim','${esc(r.simNumber||r.entryId)}')">
+      <td onclick="event.stopPropagation()"><div class="cb-row"><input type="checkbox" ${chk?'checked':''} onchange="toggleCheck('sims','${esc(r.simNumber||r.entryId)}',this.checked)"></div></td>
+      <td><strong>${r.simNumber||'—'}</strong></td><td class="td-muted">${r.iccid||'—'}</td>
+      <td>${r.network||'—'}</td><td class="td-muted">${r.plan||'—'}</td>
+      <td class="td-muted">${r.dateIn||'—'}</td><td>${r.qty||1}</td>
+      <td><span class="badge ${cls}">${r.status||'Available'}</span></td>
+      <td class="td-muted" style="max-width:120px;overflow:hidden;text-overflow:ellipsis">${r.installedIn||'—'}</td>
+      <td onclick="event.stopPropagation()" style="white-space:nowrap;display:flex;gap:4px;padding:8px 14px">
+        <button class="act-btn a-edit" onclick="openDeviceCard('sim','${esc(r.simNumber||r.entryId)}')">Edit</button>
+        ${r.status==='Available'?`<button class="act-btn a-link" onclick="openLinkModal('sim','${esc(r.simNumber||r.entryId)}')">Install</button>`:''}
+        ${r.status==='Installed'?`<button class="act-btn a-unlink" onclick="doDelink('sim','${esc(r.simNumber||r.entryId)}')">Delink</button>`:''}
+        <button class="act-btn a-out" onclick="stockOut('sims','${esc(r.simNumber||r.entryId)}')">Out</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function filterSIMs(){
+  const q=document.getElementById('s-search').value.toLowerCase(), st=document.getElementById('s-filter').value;
+  renderSIMs(simsData.filter(r=>(!q||[r.simNumber,r.iccid,r.network,r.plan].some(v=>(v||'').toLowerCase().includes(q)))&&(!st||r.status===st)));
+}
+
+function esc(s){return String(s||'').replace(/'/g,"\\'");}
+
+// ── Device Detail Card / Edit Modal ──
+function openDeviceCard(type, id){
+  const isT=type==='tracker';
+  const r=isT?trackersData.find(x=>(x.imei||x.entryId)===id):simsData.find(x=>(x.simNumber||x.entryId)===id);
+  if(!r){alert('Item not found — refresh the list first.');return;}
+
+  document.getElementById('dm-title').textContent=(isT?'📡 Tracker — ':'💳 SIM — ')+(isT?r.imei:r.simNumber)||id;
+
+  const fields=isT?[
+    ['IMEI',r.imei],['Model',r.model],['Supplier',r.supplier],['Date In',r.dateIn],
+    ['Quantity',r.qty],['Price',r.price?'PKR '+Number(r.price).toLocaleString():'—'],
+    ['Entry ID',r.entryId],['Entered By',r.enteredBy],
+    ['Assigned To',r.assignedTo||'—'],['Installer',r.installer||'—'],
+    ['City',r.city||'—'],['Notes',r.notes||'—'],
+  ]:[
+    ['SIM Number',r.simNumber],['ICCID',r.iccid],['Network',r.network],['Plan',r.plan],
+    ['Quantity',r.qty],['Date In',r.dateIn],
+    ['Entry ID',r.entryId],['Entered By',r.enteredBy],
+    ['Installed In',r.installedIn||'—'],['Notes',r.notes||'—'],
+  ];
+
+  const statuses=isT?['Available','Assigned','Faulty','Removed']:['Available','Installed','Inactive','Removed'];
+
+  document.getElementById('dm-body').innerHTML=`
+    <div class="detail-grid">${fields.map(([l,v])=>`<div class="detail-row"><span class="dl">${l}</span><span class="dv">${v||'—'}</span></div>`).join('')}</div>
+    <div style="margin-top:18px;padding-top:14px;border-top:1px solid var(--border)">
+      <div class="dl" style="margin-bottom:8px">Status</div>
+      <div class="status-pills-row" id="dm-status-pills">
+        ${statuses.map(s=>`<span class="sp ${r.status===s?'sel-'+s.toLowerCase():''}" onclick="selectStatusPill(this,'${s}')">${s}</span>`).join('')}
+      </div>
+      <input type="hidden" id="dm-new-status" value="${r.status||''}">
+    </div>
+    ${isT?`
+    <div class="grid-2" style="margin-top:14px">
+      <div class="field"><label>Installer Name</label><input id="dm-installer" value="${r.installer||''}" placeholder="Assigned installer"></div>
+      <div class="field"><label>City</label><input id="dm-city" value="${r.city||''}" placeholder="Installation city"></div>
+    </div>`:''}
+    <div class="field" style="margin-top:4px"><label>Notes</label><textarea id="dm-notes" style="height:60px">${r.notes||''}</textarea></div>
+    <div class="error-banner" id="dm-err"></div>`;
+
+  document.getElementById('dm-btns').innerHTML=`
+    <button class="btn btn-ghost" onclick="closeModal('deviceModal')">Cancel</button>
+    <button class="btn btn-solid" onclick="saveDeviceEdit('${type}','${esc(id)}')">Save Changes</button>`;
+
+  document.getElementById('deviceModal').classList.add('open');
+}
+
+function selectStatusPill(el,val){
+  el.closest('.status-pills-row').querySelectorAll('.sp').forEach(s=>{s.className='sp';});
+  el.classList.add('sel-'+val.toLowerCase());
+  document.getElementById('dm-new-status').value=val;
+}
+
+async function saveDeviceEdit(type,id){
+  const isT=type==='tracker';
+  const newStatus=document.getElementById('dm-new-status').value;
+  const notes=document.getElementById('dm-notes').value;
+  const installer=isT?(document.getElementById('dm-installer')?.value||''):'';
+  const city=isT?(document.getElementById('dm-city')?.value||''):'';
+  const errEl=document.getElementById('dm-err');
+  errEl.style.display='none';
+  const updates={status:newStatus,notes,lastUpdated:new Date().toISOString()};
+  if(isT){updates.installer=installer;updates.city=city;}
+  try{
+    const res=await crmPost({action:'updateField',sheetTab:isT?'Trackers':'SIMs',keyField:isT?'imei':'simNumber',keyValue:id,updates});
+    if(res.status==='error') throw new Error(res.message);
+    closeModal('deviceModal');
+    showToast('✓ '+( isT?'Tracker':'SIM')+' updated successfully');
+    isT?loadTrackers():loadSIMs();
+  }catch(err){showBanner(errEl,'Save failed: '+(err.message||'check connection'));}
+}
+
+// ── Link / Assign SIM ↔ Tracker ──
+function openLinkModal(preselect, value){
+  const lmTitle=document.getElementById('lm-title');
+  const lmBody=document.getElementById('lm-body');
+  const lmBtns=document.getElementById('lm-btns');
+  document.getElementById('lm-err').style.display='none';
+
+  const availTrackers=trackersData.filter(r=>r.status==='Available');
+  const availSims=simsData.filter(r=>r.status==='Available');
+
+  lmTitle.textContent='🔗 Link SIM to Tracker';
+  lmBody.innerHTML=`
+    ${preselect==='tracker'?`<div class="assign-info-box"><strong>Selected Tracker</strong>${value}</div>`:''}
+    ${preselect==='sim'?`<div class="assign-info-box"><strong>Selected SIM</strong>${value}</div>`:''}
+    <div class="field"><label>Tracker IMEI</label>
+      <select id="lm-tracker"><option value="">Select tracker…</option>
+        ${availTrackers.map(r=>`<option value="${esc(r.imei)}" ${preselect==='tracker'&&r.imei===value?'selected':''}>${r.imei} — ${r.model||''}</option>`).join('')}
+      </select></div>
+    <div class="field"><label>SIM Number</label>
+      <select id="lm-sim"><option value="">Select SIM…</option>
+        ${availSims.map(r=>`<option value="${esc(r.simNumber)}" ${preselect==='sim'&&r.simNumber===value?'selected':''}>${r.simNumber} — ${r.network||''}</option>`).join('')}
+      </select></div>
+    <div class="grid-2">
+      <div class="field"><label>Vehicle / Reg No.</label><input id="lm-vehicle" placeholder="ABC-123"></div>
+      <div class="field"><label>Installer</label><input id="lm-installer" placeholder="Installer name"></div>
+    </div>
+    <div class="field"><label>City</label><input id="lm-city" placeholder="Installation city"></div>
+    <div class="field"><label>Notes</label><input id="lm-notes" placeholder="Optional"></div>`;
+  lmBtns.innerHTML=`<button class="btn btn-ghost" onclick="closeModal('linkModal')">Cancel</button><button class="btn btn-solid" onclick="doLink()">Link & Assign →</button>`;
+  document.getElementById('linkModal').classList.add('open');
+}
+
+async function doLink(){
+  const tracker=document.getElementById('lm-tracker').value;
+  const sim=document.getElementById('lm-sim').value;
+  const errEl=document.getElementById('lm-err');
+  errEl.style.display='none';
+  if(!tracker||!sim){showBanner(errEl,'Please select both a tracker and a SIM');return;}
+  const user=crmCurrentUser();
+  const payload={
+    sheetTab:'Assignments',action:'assign',
+    trackerIMEI:tracker,simNumber:sim,
+    vehicle:document.getElementById('lm-vehicle').value.trim(),
+    installer:document.getElementById('lm-installer').value.trim(),
+    city:document.getElementById('lm-city').value.trim(),
+    notes:document.getElementById('lm-notes').value.trim(),
+    assignDate:new Date().toISOString().split('T')[0],
+    assignedBy:user?user.name:'Unknown',
+    assignId:'ASN-'+Date.now().toString(36).toUpperCase().slice(-6),
+  };
+  try{
+    const res=await crmPost(payload);
+    if(res.status==='error') throw new Error(res.message);
+    closeModal('linkModal');
+    showToast('✓ SIM linked to Tracker — '+tracker+' ↔ '+sim);
+    await Promise.all([loadTrackers(),loadSIMs()]);
+  }catch(err){showBanner(errEl,'Failed: '+(err.message||'check connection'));}
+}
+
+// ── Delink ──
+async function doDelink(type, id){
+  if(!confirm('Remove the link between this '+(type==='tracker'?'tracker and its SIM':'SIM and its tracker')+'?'))return;
+  const isT=type==='tracker';
+  const r=isT?trackersData.find(x=>(x.imei||x.entryId)===id):simsData.find(x=>(x.simNumber||x.entryId)===id);
+  const linkedId=isT?r?.assignedTo?.split('/')[0]?.trim():r?.installedIn?.split('/')[0]?.trim();
+  try{
+    // Reset tracker
+    if(isT||linkedId) await crmPost({action:'updateField',sheetTab:'Trackers',keyField:'imei',keyValue:isT?id:linkedId,updates:{status:'Available',assignedTo:'',installer:'',city:'',lastUpdated:new Date().toISOString()}});
+    // Reset SIM
+    await crmPost({action:'updateField',sheetTab:'SIMs',keyField:'simNumber',keyValue:isT?linkedId:id,updates:{status:'Available',installedIn:'',lastUpdated:new Date().toISOString()}});
+    showToast('✓ Device delinked successfully');
+    await Promise.all([loadTrackers(),loadSIMs()]);
+  }catch(err){alert('Delink failed: '+(err.message||'check connection'));}
+}
+
+// ── Stock Out ──
+async function stockOut(type,id){
+  if(!confirm('Mark this item as removed from stock? This cannot be undone.'))return;
+  const user=crmCurrentUser();
+  try{
+    const res=await crmPost({sheetTab:type==='trackers'?'Trackers':'SIMs',action:'stockOut',id,date:new Date().toISOString().split('T')[0],removedBy:user?user.name:'Unknown'});
+    if(res.status==='error') throw new Error(res.message);
+    type==='trackers'?loadTrackers():loadSIMs();
+  }catch(err){alert('Failed: '+(err.message||'check connection'));}
+}
+
+// ── Bulk selection ──
+function toggleCheck(type,id,checked){
+  const sel=type==='trackers'?selectedTrackers:selectedSims;
+  checked?sel.add(id):sel.delete(id);
+  updateBulkBar(type);
+}
+
+function toggleAllCheck(type,checked){
+  const sel=type==='trackers'?selectedTrackers:selectedSims;
+  const data=type==='trackers'?trackersData:simsData;
+  sel.clear();
+  if(checked) data.forEach(r=>sel.add(r[type==='trackers'?'imei':'simNumber']||r.entryId));
+  type==='trackers'?renderTrackers(trackersData):renderSIMs(simsData);
+  updateBulkBar(type);
+}
+
+function updateBulkBar(type){
+  const sel=type==='trackers'?selectedTrackers:selectedSims;
+  const bar=document.getElementById(type[0]+'-bulk-bar');
+  const lbl=document.getElementById(type[0]+'-bulk-label');
+  lbl.textContent=sel.size+' selected';
+  bar.classList.toggle('visible',sel.size>0);
+}
+
+function clearBulk(type){
+  (type==='trackers'?selectedTrackers:selectedSims).clear();
+  const allChk=document.getElementById(type[0]+'-chk-all');
+  if(allChk) allChk.checked=false;
+  type==='trackers'?renderTrackers(trackersData):renderSIMs(simsData);
+  updateBulkBar(type);
+}
+
+async function applyBulk(type){
+  const isT=type==='trackers';
+  const sel=isT?selectedTrackers:selectedSims;
+  if(!sel.size){alert('No items selected');return;}
+  const newStatus=document.getElementById(isT?'t-bulk-status':'s-bulk-status').value;
+  const installer=isT?(document.getElementById('t-bulk-installer')?.value.trim()||''):'';
+  const city=isT?(document.getElementById('t-bulk-city')?.value.trim()||''):'';
+  if(!newStatus&&!installer&&!city){alert('Set at least one field to update');return;}
+  if(!confirm(`Apply changes to ${sel.size} item(s)?`))return;
+
+  const updates={lastUpdated:new Date().toISOString()};
+  if(newStatus) updates.status=newStatus;
+  if(installer) updates.installer=installer;
+  if(city)      updates.city=city;
+
+  let ok=0, fail=0;
+  for(const id of sel){
+    try{
+      const res=await crmPost({action:'updateField',sheetTab:isT?'Trackers':'SIMs',keyField:isT?'imei':'simNumber',keyValue:id,updates});
+      if(res.status==='error') fail++; else ok++;
+    }catch{fail++;}
+  }
+  showToast(`✓ Bulk update: ${ok} updated${fail?', '+fail+' failed':''}`);
+  clearBulk(type);
+  isT?loadTrackers():loadSIMs();
+}
+
+// ── Toast notification ──
+function showToast(msg){
+  const t=document.createElement('div');
+  t.style.cssText='position:fixed;bottom:24px;right:24px;background:rgba(61,255,160,0.12);border:1px solid rgba(61,255,160,0.35);border-radius:10px;padding:14px 20px;color:var(--success);font-size:12px;font-family:var(--mono);z-index:999;animation:fadeUp 0.3s ease;max-width:360px';
+  t.textContent=msg; document.body.appendChild(t);
+  setTimeout(()=>t.remove(),3500);
+}
+</script>
+</body>
+</html>
