@@ -106,8 +106,8 @@ async function loadStats() {
     if (leads.data) {
       document.getElementById('st-leads').textContent = leads.data.length;
       const d = leads.data, max = d.length||1;
-      const statuses=['New','Warm','Hot','Closed','Lost'];
-      const colors=['var(--accent)','var(--warn)','var(--danger)','var(--success)','var(--muted)'];
+      const statuses=['New Lead','Contacted','Interested','Negotiation','Won','Lost'];
+      const colors=['var(--accent)','var(--accent2)','var(--warn)','var(--accent3)','var(--success)','var(--muted)'];
       document.getElementById('funnelBars').innerHTML = statuses.map((s,i)=>{
         const cnt=d.filter(r=>r.status===s).length, pct=Math.round(cnt/max*100);
         return `<div class="funnel-bar"><div class="funnel-bar-label"><span>${s}</span><span style="color:${colors[i]};font-weight:500">${cnt}</span></div><div class="funnel-bar-track"><div class="funnel-bar-fill" style="width:${pct}%;background:${colors[i]}"></div></div></div>`;
