@@ -4,7 +4,7 @@
 // ─────────────────────────────────────────────
 
 // ✏️  PASTE YOUR GOOGLE APPS SCRIPT URL HERE
-const CRM_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbygw8CMCx_EoXScr1pZEShqKKi0Q78C7iaiwu7wd5MR6nqRVpoYJUb6PqxqJqA_FIyZsw/exec";
+const CRM_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwbXQt8UVeGBZ7B9EwFlndrN5iA6g6dpSekdME3whOFSNh-ivnuhEcnG5pKnvptvDj0Yw/exec";
 
 // ── Role permissions ──
 const CRM_PERMISSIONS = {
