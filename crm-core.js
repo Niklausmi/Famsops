@@ -4,14 +4,14 @@
 // ─────────────────────────────────────────────
 
 // ✏️  PASTE YOUR GOOGLE APPS SCRIPT URL HERE
-const CRM_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzgTZzFQUEldBlCzeqwEfNAYgrFobOdzzd9egyi5ghDcGqEqDk4M4vgyTqCyJpM1sZGEA/exec";
+const CRM_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbygw8CMCx_EoXScr1pZEShqKKi0Q78C7iaiwu7wd5MR6nqRVpoYJUb6PqxqJqA_FIyZsw/exec";
 
 // ── Role permissions ──
 const CRM_PERMISSIONS = {
-  admin:      ["dashboard","leads","joborder","inventory","users"],
-  sales:      ["dashboard","leads"],
-  operations: ["dashboard","joborder","inventory"],
-  management: ["dashboard","leads","joborder","inventory"],
+  admin:      ["dashboard","leads","joborder","jolist","customers","inventory","users"],
+  sales:      ["dashboard","leads","customers"],
+  operations: ["dashboard","joborder","jolist","customers","inventory"],
+  management: ["dashboard","leads","joborder","jolist","customers","inventory"],
 };
 
 // ────────────────────────────────────────────
@@ -78,7 +78,7 @@ body::before{content:'';position:fixed;inset:0;
   linear-gradient(90deg,rgba(56,217,245,0.025) 1px,transparent 1px);
   background-size:44px 44px;pointer-events:none;z-index:0}
 .crm-nav{position:fixed;top:0;left:0;width:var(--nav-w);height:100vh;
-  background:var(--surface2);border-right:1px solid var(--border-hi);
+  background:var(--surface);border-right:1px solid var(--border);
   display:flex;flex-direction:column;z-index:100;overflow:hidden}
 .nav-logo{padding:22px 20px 18px;border-bottom:1px solid var(--border)}
 .nav-logo .brand{font-family:var(--display);font-size:15px;font-weight:800;
@@ -198,7 +198,6 @@ tbody td{padding:12px 14px;color:var(--text)}
 .empty-state{text-align:center;padding:48px 20px}
 .empty-state .ei{font-size:30px;opacity:0.3;margin-bottom:10px}
 .empty-state p{color:var(--muted);font-size:12px}
-@media(max-width:768px){ .crm-nav{ display:none; } }
 .error-banner{display:none;margin-top:12px;padding:11px 14px;background:rgba(255,95,109,0.08);border:1px solid rgba(255,95,109,0.3);border-radius:8px;color:var(--danger);font-size:11px}
 .success-flash{display:none;margin-top:12px;padding:11px 14px;background:rgba(61,255,160,0.08);border:1px solid rgba(61,255,160,0.3);border-radius:8px;color:var(--success);font-size:11px}
 .pill-group{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:16px}
@@ -227,7 +226,9 @@ function crmNav(activePage) {
   const links = [
     { id:'dashboard', href:'dashboard.html',        icon:'⬡',  label:'Dashboard'   },
     { id:'leads',     href:'sales_leads.html',       icon:'🎯', label:'Sales Leads' },
-    { id:'joborder',  href:'vehicle_job_order.html', icon:'📋', label:'Job Orders'  },
+    { id:'joborder',  href:'vehicle_job_order.html', icon:'📋', label:'New Job Order'},
+    { id:'jolist',    href:'job_orders.html',        icon:'🗂',  label:'Job Orders'  },
+    { id:'customers', href:'customers.html',         icon:'👤', label:'Customers'   },
     { id:'inventory', href:'inventory.html',         icon:'📦', label:'Inventory'   },
     { id:'users',     href:'users.html',             icon:'👥', label:'Users'       },
   ];
