@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Job Orders — FleetCRM</title>
+<script src="crm-core.js"></script>
+<script>document.head.insertAdjacentHTML('beforeend', CRM_STYLE);</script>
+<style>
+body{display:block!important;padding:0!important}body::after{display:none}
+
+/* ── Tab bar ── */
+.tab-bar{display:flex;gap:6px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:5px;margin-bottom:24px}
+.tab-btn{flex:1;padding:10px 16px;border:none;border-radius:8px;background:transparent;color:var(--muted);font-family:var(--mono);font-size:11px;letter-spacing:1px;text-transform:uppercase;cursor:pointer;transition:all 0.2s;text-align:center}
+.tab-btn.active{background:rgba(56,217,245,0.1);color:var(--accent);border:1px solid rgba(56,217,245,0.2)}
+.tab-btn:hover:not(.active){color:var(--text)}
+.tab-panel{display:none}.tab-panel.active{display:block}
+
+/* ── Customer search ── */
+.cust-wrap{position:relative}
+.cust-dd{position:absolute;top:calc(100% + 4px);left:0;right:0;background:var(--surface);border:1px solid var(--border-hi);border-radius:10px;max-height:260px;overflow-y:auto;z-index:200;box-shadow:0 8px 32px rgba(0,0,0,0.5);display:none}
+.cust-dd.open{display:block}
+.co{padding:11px 14px;cursor:pointer;border-bottom:1px solid var(--border);transition:background 0.12s}
+.co:last-child{border-bottom:none}.co:hover{background:rgba(56,217,245,0.06)}
+.co-name{font-size:12px;color:var(--text);font-weight:600}
+.co-company{font-size:10px;color:var(--accent2);margin-top:1px}
+.co-meta{font-size:10px;color:var(--muted);margin-top:2px}
+.co-id{font-size:9px;color:var(--muted2);font-family:var(--mono);margin-top:2px}
+.sel-banner{display:none;background:rgba(56,217,245,0.06);border:1px solid rgba(56,217,245,0.25);border-radius:10px;padding:12px 18px;margin-bottom:18px;align-items:center;gap:14px;flex-wrap:wrap}
+.sel-banner.on{display:flex}
+
+/* ── Reuse JO form styles ── */
+.step-nav{display:flex;gap:0;margin-bottom:28px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:5px;overflow-x:auto;scrollbar-width:none}
+.step-nav::-webkit-scrollbar{display:none}
+.step-dot{flex:1;padding:8px 4px;text-align:center;cursor:pointer;border-radius:8px;transition:all 0.2s;position:relative;min-width:60px}
+.step-dot .dot-num{font-family:var(--display);font-size:10px;font-weight:700;color:var(--muted);display:block;margin-bottom:2px;transition:color 0.2s}
+.step-dot .dot-label{font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);transition:color 0.2s;white-space:nowrap}
+.step-dot.active{background:rgba(56,217,245,0.08)}
+.step-dot.active .dot-num,.step-dot.active .dot-label{color:var(--accent)}
+.step-dot.done .dot-num,.step-dot.done .dot-label{color:var(--success)}
+.step-dot.done::after{content:'✓';position:absolute;top:3px;right:5px;font-size:8px;color:var(--success)}
+.progress-track{height:2px;background:var(--border);border-radius:2px;margin-bottom:28px;overflow:hidden}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--accent2),var(--accent));border-radius:2px;transition:width 0.4s cubic-bezier(0.4,0,0.2,1)}
+.step-content{display:none}.step-content.active{display:block}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:0 20px}
+.col-span-2{grid-column:span 2}
+.divider-label{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);padding:12px 0 4px;display:flex;align-items:center;gap:10px;margin-bottom:4px}
+.divider-label::after{content:'';flex:1;height:1px;background:var(--border)}
+.toc-options{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:18px}
+.toc-btn{padding:14px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--muted);font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:1px;cursor:pointer;transition:all 0.2s;text-align:center}
+.toc-btn:hover{border-color:rgba(255,255,255,0.15);color:var(--text)}
+.toc-btn.selected{background:rgba(56,217,245,0.1);border-color:rgba(56,217,245,0.4);color:var(--accent)}
+.nav-bar{display:flex;align-items:center;justify-content:space-between;margin-top:28px;padding-top:20px;border-top:1px solid var(--border)}
+.step-counter{font-size:10px;letter-spacing:1px;color:var(--muted)}
+.step-counter strong{color:var(--text);font-family:var(--display)}
+.btn-group{display:flex;gap:10px}
+.btn-submit-jo{background:linear-gradient(135deg,#38d9f5,#7b6fff);color:#0a0c0f;font-weight:700;border:none;padding:11px 22px;border-radius:8px;font-family:var(--mono);font-size:11px;letter-spacing:1px;text-transform:uppercase;cursor:pointer;transition:all 0.15s}
+.btn-submit-jo:hover{box-shadow:0 0 20px rgba(56,217,245,0.4);transform:translateY(-1px)}
+.btn-submit-jo:disabled{opacity:0.45;cursor:not-allowed;transform:none}
+.checkbox-row{display:flex;align-items:center;gap:12px;padding:16px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;cursor:pointer;margin-top:8px;transition:border-color 0.2s}
+.checkbox-row:hover{border-color:var(--border-hi)}
+.checkbox-row input[type=checkbox]{width:18px;height:18px;accent-color:var(--accent);cursor:pointer;flex-shrink:0}
+.checkbox-row span{font-size:12px;color:var(--muted);line-height:1.4}
+.success-screen{display:none;text-align:center;padding:60px 20px}
+.success-screen.active{display:block}
+.success-icon{width:72px;height:72px;background:rgba(61,255,160,0.1);border:1px solid rgba(61,255,160,0.3);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:32px;margin:0 auto 24px}
+
+/* ── List tab styles ── */
+.jo-stats{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:22px}
+.fp{background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:16px 18px;margin-bottom:14px}
+.fp-row{display:grid;gap:10px;margin-bottom:10px}.fp-row:last-child{margin-bottom:0}
+.fp-4{grid-template-columns:2fr 1fr 1fr 1fr}.fp-5{grid-template-columns:1fr 1fr 1fr 1fr 1fr}
+.fi{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--mono);font-size:11px;padding:8px 10px;outline:none;transition:border-color 0.2s}
+.fi:focus{border-color:rgba(56,217,245,0.4)}.fi::placeholder{color:var(--muted)}
+.fi-sel{appearance:none;cursor:pointer;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath fill='%235a6070' d='M5 6L0 0h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:26px}
+.fi-sel option{background:#1a1e26}
+.jo-row{cursor:pointer;transition:background 0.12s}
+.jo-row:hover{background:rgba(255,255,255,0.025)!important}
+.jo-row.expanded{background:rgba(56,217,245,0.04)!important}
+.jo-det{display:none;background:var(--surface2);border-bottom:1px solid var(--border)}
+.jo-det.open{display:table-row}
+.det-inner{padding:20px 24px}
+.det-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:0;border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:14px}
+.dg-cell{padding:11px 14px;border-right:1px solid var(--border);border-bottom:1px solid var(--border)}
+.dg-cell:nth-child(4n){border-right:none}.dg-cell:nth-last-child(-n+4){border-bottom:none}
+.dg-l{font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:3px}
+.dg-v{font-size:12px;color:var(--text);word-break:break-word}
+.pg-bar{display:flex;align-items:center;justify-content:space-between;margin-top:14px;flex-wrap:wrap;gap:10px}
+.pg-btns{display:flex;align-items:center;gap:5px;flex-wrap:wrap}
+.pgb{padding:5px 10px;border-radius:6px;background:var(--surface2);border:1px solid var(--border);color:var(--muted);font-family:var(--mono);font-size:11px;cursor:pointer;transition:all 0.15s}
+.pgb:hover{color:var(--text);border-color:var(--border-hi)}.pgb.act{background:rgba(56,217,245,0.1);border-color:rgba(56,217,245,0.3);color:var(--accent)}.pgb:disabled{opacity:0.3;cursor:not-allowed}
+.pg-jump{display:flex;align-items:center;gap:6px;font-size:10px;color:var(--muted)}
+.pg-jump input{width:50px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:var(--mono);font-size:11px;padding:5px 8px;outline:none;text-align:center}
+.toc-new{background:rgba(56,217,245,0.1);color:var(--accent)}
+.toc-rep{background:rgba(255,179,71,0.1);color:var(--warn)}
+.toc-rem{background:rgba(255,95,109,0.1);color:var(--danger)}
+@media(max-width:900px){.jo-stats{grid-template-columns:repeat(3,1fr)}.fp-4,.fp-5{grid-template-columns:1fr 1fr}.det-grid{grid-template-columns:1fr 1fr}.grid-2{grid-template-columns:1fr}}
+@media(max-width:600px){.jo-stats{grid-template-columns:1fr 1fr}.fp-4,.fp-5{grid-template-columns:1fr}.det-grid{grid-template-columns:1fr}.col-span-2{grid-column:span 1}.toc-options{grid-template-columns:1fr}.step-dot .dot-label{display:none}}
+</style>
+</head>
+<body>
+<script>const _gu = crmGuard('jolist');</script>
+
+<div class="crm-main">
+  <div class="crm-topbar">
+    <div><div class="page-title">Job Orders</div><div class="page-subtitle">New orders &amp; all installation records in one place</div></div>
+    <div class="topbar-right">
+      <div class="topbar-time" id="clock"></div>
+      <div id="joIdBadge" style="background:var(--surface2);border:1px solid var(--border);padding:5px 12px;border-radius:6px;font-size:10px;letter-spacing:1.5px;color:var(--muted)">JO---------</div>
+    </div>
+  </div>
+
+  <div class="crm-content fade-up">
+
+    <!-- Tabs -->
+    <div class="tab-bar">
+      <button class="tab-btn active" id="tab-new" onclick="switchTab('new',this)">＋ New Job Order</button>
+      <button class="tab-btn" id="tab-list" onclick="switchTab('list',this)">📋 All Job Orders</button>
+    </div>
+
+    <!-- ══════════════════════════════════════════
+         TAB 1 — NEW JOB ORDER
+         ══════════════════════════════════════════ -->
+    <div class="tab-panel active" id="panel-new">
+
+      <!-- Customer lookup banner -->
+      <div class="card" style="margin-bottom:16px">
+        <div class="section-head">
+          <div class="section-icon si-cyan">👤</div>
+          <div><h2>Customer Lookup</h2><p>Search and select a customer to auto-fill the form below. Go to <a href="customers.html" style="color:var(--accent)">Customers</a> to add or edit customer records.</p></div>
+        </div>
+
+        <div style="display:flex;gap:10px;align-items:flex-start;flex-wrap:wrap">
+          <div class="cust-wrap" style="flex:1;min-width:260px">
+            <input class="fi" id="custQ" placeholder="Search by name, contact, CNIC, company, RAC or Customer ID…" oninput="searchCustomers(this.value)" autocomplete="off" style="font-size:12px;padding:10px 14px">
+            <div class="cust-dd" id="custDD"></div>
+          </div>
+          <button class="btn btn-ghost" onclick="clearSelectedCustomer()" style="white-space:nowrap;align-self:flex-end">✕ Clear Selection</button>
+        </div>
+
+        <!-- Selected banner -->
+        <div class="sel-banner" id="selBanner" style="margin-top:14px;margin-bottom:0">
+          <div style="flex:1">
+            <div style="font-size:13px;font-weight:700;color:var(--text);font-family:var(--display)" id="sb-name"></div>
+            <div style="font-size:11px;color:var(--muted);margin-top:3px" id="sb-meta"></div>
+          </div>
+          <div style="font-size:9px;font-family:var(--mono);color:var(--muted2);background:var(--surface2);padding:4px 10px;border-radius:4px;border:1px solid var(--border)" id="sb-id"></div>
+        </div>
+      </div>
+
+      <!-- 9-step JO form -->
+      <div class="card">
+
+        <!-- Step nav -->
+        <div class="step-nav" id="stepNav">
+          <div class="step-dot active" onclick="goTo(0)"><span class="dot-num">01</span><span class="dot-label">Customer</span></div>
+          <div class="step-dot" onclick="goTo(1)"><span class="dot-num">02</span><span class="dot-label">Sales</span></div>
+          <div class="step-dot" onclick="goTo(2)"><span class="dot-num">03</span><span class="dot-label">Device</span></div>
+          <div class="step-dot" onclick="goTo(3)"><span class="dot-num">04</span><span class="dot-label">Vehicle</span></div>
+          <div class="step-dot" onclick="goTo(4)"><span class="dot-num">05</span><span class="dot-label">Testing</span></div>
+          <div class="step-dot" onclick="goTo(5)"><span class="dot-num">06</span><span class="dot-label">Alerts</span></div>
+          <div class="step-dot" onclick="goTo(6)"><span class="dot-num">07</span><span class="dot-label">User</span></div>
+          <div class="step-dot" onclick="goTo(7)"><span class="dot-num">08</span><span class="dot-label">Creds</span></div>
+          <div class="step-dot" onclick="goTo(8)"><span class="dot-num">09</span><span class="dot-label">Confirm</span></div>
+        </div>
+        <div class="progress-track"><div class="progress-fill" id="progressFill" style="width:11.1%"></div></div>
+
+        <form id="jobForm">
+
+          <!-- S1: Customer -->
+          <div class="step-content active">
+            <div class="section-head"><div class="section-icon si-cyan">👤</div><div><h2>Customer Details</h2><p>Auto-filled from selected customer above — edit as needed</p></div></div>
+            <div class="grid-2">
+              <div class="field"><label>Date</label><input type="date" name="date" id="f-date"></div>
+              <div class="field"><label>Invoice Number</label><input name="invoiceNumber" placeholder="INV-XXXXXX"></div>
+              <div class="field"><label>Customer Name</label><input name="customer" id="f-customer" placeholder="Full legal name"></div>
+              <div class="field"><label>Contact</label><input name="contact" id="f-contact" placeholder="+92 XXX XXXXXXX"></div>
+              <div class="field"><label>RAC / Group</label><input name="rac" id="f-rac"></div>
+              <div class="field"><label>Company / Reference</label><input name="reference" id="f-reference"></div>
+              <div class="field"><label>City</label><input name="city" id="f-city"></div>
+              <div class="field"><label>Area</label><input name="area" id="f-area"></div>
+              <div class="field col-span-2"><label>Final Service Call</label><input name="serviceCall"></div>
+            </div>
+          </div>
+
+          <!-- S2: Sales -->
+          <div class="step-content">
+            <div class="section-head"><div class="section-icon si-purple">💼</div><div><h2>Sales / Accounts</h2><p>Order type, package and payment</p></div></div>
+            <div class="field"><label>Type of Contract (TOC)</label>
+              <div class="toc-options">
+                <div class="toc-btn" onclick="selectTOC('new_installation',this)">New Installation</div>
+                <div class="toc-btn" onclick="selectTOC('replacement',this)">Replacement</div>
+                <div class="toc-btn" onclick="selectTOC('removal',this)">Removal</div>
+              </div>
+              <input type="hidden" name="toc" id="tocHidden">
+            </div>
+            <div class="grid-2">
+              <div class="field"><label>Sales Person</label><input name="sales"></div>
+              <div class="field"><label>Package</label><input name="package"></div>
+              <div class="field"><label>AMC</label><input name="amc"></div>
+              <div class="field"><label>Payment Mode</label>
+                <select name="payment"><option value="">Select...</option><option>Cash</option><option>Credit</option><option>Transfer</option></select>
+              </div>
+              <div class="field"><label>Receipt Number</label><input name="receipt"></div>
+              <div class="field"><label>Committed Date</label><input type="date" name="commitDate"></div>
+            </div>
+          </div>
+
+          <!-- S3: Device -->
+          <div class="step-content">
+            <div class="section-head"><div class="section-icon si-cyan">📡</div><div><h2>Device Information</h2><p>New device and replacement unit details</p></div></div>
+            <div class="divider-label">New Device</div>
+            <div class="grid-2">
+              <div class="field"><label>IMEI</label><input name="imei" placeholder="15-digit IMEI"></div>
+              <div class="field"><label>Serial Number</label><input name="serial"></div>
+              <div class="field"><label>GSM</label><input name="gsm"></div>
+              <div class="field"><label>Module</label><input name="module"></div>
+            </div>
+            <div class="divider-label">Old Device (Replacement)</div>
+            <div class="grid-2">
+              <div class="field"><label>IMEI (Old)</label><input name="oldimei" placeholder="15-digit IMEI"></div>
+              <div class="field"><label>Serial (Old)</label><input name="oldserial"></div>
+              <div class="field"><label>GSM (Old)</label><input name="oldgsm"></div>
+              <div class="field"><label>Module (Old)</label><input name="oldmodule"></div>
+            </div>
+          </div>
+
+          <!-- S4: Vehicle -->
+          <div class="step-content">
+            <div class="section-head"><div class="section-icon si-warn">🚗</div><div><h2>Vehicle Information</h2><p>Registration, identification and description</p></div></div>
+            <div class="grid-2">
+              <div class="field"><label>Registration Number</label><input name="vehicle" placeholder="ABC-000"></div>
+              <div class="field"><label>Engine Number</label><input name="engine"></div>
+              <div class="field col-span-2"><label>Chassis Number</label><input name="chassis"></div>
+              <div class="field"><label>Make</label><input name="make" placeholder="Toyota, Honda…"></div>
+              <div class="field"><label>Model</label><input name="model"></div>
+              <div class="field"><label>Color</label><input name="color"></div>
+            </div>
+          </div>
+
+          <!-- S5: Testing -->
+          <div class="step-content">
+            <div class="section-head"><div class="section-icon si-cyan">🔧</div><div><h2>Installation &amp; Testing</h2><p>Officer details and pre/post pack checks</p></div></div>
+            <div class="grid-2">
+              <div class="field"><label>Testing Officer</label><input name="testingOfficer"></div>
+              <div class="field"><label>Installer</label><input name="installer"></div>
+              <div class="field"><label>Pre Pack (BT/GSM/GPS)</label><input name="prepack" placeholder="e.g. OK / OK / OK"></div>
+              <div class="field"><label>Post Pack (BT/GSM/GPS)</label><input name="postpack" placeholder="e.g. OK / OK / OK"></div>
+              <div class="field col-span-2"><label>Cut Off Type</label><input name="cutoff"></div>
+            </div>
+          </div>
+
+          <!-- S6: Alerts -->
+          <div class="step-content">
+            <div class="section-head"><div class="section-icon si-purple">🔔</div><div><h2>Alert Settings</h2><p>Configure zones, notifications and device placement</p></div></div>
+            <div class="grid-2">
+              <div class="field"><label>SMS Type</label><input name="smsType"></div>
+              <div class="field"><label>Fence City</label><input name="fenceCity"></div>
+              <div class="field"><label>Device Location</label><input name="deviceLocation"></div>
+              <div class="field"><label>Installation Area</label><input name="installArea"></div>
+              <div class="field col-span-2"><label>Installation City</label><input name="installCity"></div>
+            </div>
+          </div>
+
+          <!-- S7: User -->
+          <div class="step-content">
+            <div class="section-head"><div class="section-icon si-green">🔑</div><div><h2>User Credentials</h2><p>Platform login and verification details</p></div></div>
+            <div class="grid-2">
+              <div class="field"><label>Username</label><input name="username" placeholder="Platform username"></div>
+              <div class="field"><label>Password</label><input type="password" name="password"></div>
+              <div class="field"><label>SMS Number</label><input name="smsNumber"></div>
+              <div class="field"><label>SMS Person</label><input name="smsPerson"></div>
+              <div class="field"><label>App Verification</label><input name="verification"></div>
+              <div class="field"><label>License Key</label><input name="license" placeholder="XXXX-XXXX-XXXX"></div>
+            </div>
+          </div>
+
+          <!-- S8: Credentials -->
+          <div class="step-content">
+            <div class="section-head"><div class="section-icon si-purple">📋</div><div><h2>Customer Credentials</h2><p>Full identification — auto-filled from customer record</p></div></div>
+            <div class="grid-2">
+              <div class="field"><label>Full Name</label><input name="name" id="f-name"></div>
+              <div class="field"><label>1st User</label><input name="user1"></div>
+              <div class="field"><label>2nd User</label><input name="user2"></div>
+              <div class="field"><label>3rd User</label><input name="user3"></div>
+              <div class="field"><label>P Code</label><input name="pcode"></div>
+              <div class="field"><label>E Code</label><input name="ecode"></div>
+              <div class="field"><label>CNIC</label><input name="cnic" id="f-cnic" placeholder="XXXXX-XXXXXXX-X"></div>
+              <div class="field"><label>Father's Name</label><input name="father" id="f-father"></div>
+              <div class="field col-span-2"><label>Email Address</label><input type="email" name="email" id="f-email"></div>
+              <div class="field col-span-2"><label>Postal Address</label><textarea name="address" id="f-address" placeholder="Full postal address"></textarea></div>
+            </div>
+          </div>
+
+          <!-- S9: Confirm -->
+          <div class="step-content">
+            <div class="section-head"><div class="section-icon si-green">📝</div><div><h2>Agreement &amp; Submission</h2><p>Review and confirm</p></div></div>
+            <div class="field"><label>Disclaimer / Notes</label><textarea name="disclaimer" style="height:120px" placeholder="Enter any disclaimer, special conditions or notes…"></textarea></div>
+            <label class="checkbox-row">
+              <input type="checkbox" id="confirmCheck">
+              <span>I confirm that all information entered in this job order is accurate, complete and verified. I authorize submission to the Fleet Management System.</span>
+            </label>
+          </div>
+
+        </form>
+
+        <!-- Nav bar -->
+        <div class="nav-bar">
+          <div class="step-counter">Step <strong id="stepNum">1</strong> of <strong>9</strong></div>
+          <div class="btn-group">
+            <button class="btn btn-ghost" id="btnBack" onclick="prevStep()" style="display:none">← Back</button>
+            <button class="btn btn-primary" id="btnNext" onclick="nextStep()">Next →</button>
+            <button class="btn-submit-jo" id="btnSubmit" onclick="submitJO()" style="display:none">Submit Order</button>
+          </div>
+        </div>
+        <div id="joBanner" style="display:none;margin-top:14px;padding:11px 14px;background:rgba(255,95,109,0.08);border:1px solid rgba(255,95,109,0.3);border-radius:8px;color:var(--danger);font-size:11px"></div>
+
+        <!-- Success -->
+        <div class="success-screen" id="successScreen">
+          <div class="success-icon">✓</div>
+          <h2 style="font-family:var(--display);font-size:22px;font-weight:700;color:var(--success);margin-bottom:8px">Order Submitted</h2>
+          <p style="font-size:13px;color:var(--muted);margin-bottom:24px">Job order recorded successfully in Google Sheets.</p>
+          <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+            <button class="btn btn-primary" onclick="exportLastJO()">⬇ Export PDF</button>
+            <button class="btn btn-ghost" onclick="resetJOForm()">New Job Order</button>
+            <button class="btn btn-ghost" onclick="switchTab('list',document.getElementById('tab-list'))">View All Orders</button>
+          </div>
+        </div>
+
+      </div><!-- /card -->
+    </div><!-- /panel-new -->
+
+    <!-- ══════════════════════════════════════════
+         TAB 2 — ALL JOB ORDERS
+         ══════════════════════════════════════════ -->
+    <div class="tab-panel" id="panel-list">
+
+      <div class="jo-stats">
+        <div class="stat-tile t-cyan"><div class="tile-label">Total Orders</div><div class="tile-val" id="jst-total">—</div><div class="tile-icon">📋</div></div>
+        <div class="stat-tile t-purple"><div class="tile-label">New Install</div><div class="tile-val" id="jst-new">—</div><div class="tile-icon">📡</div></div>
+        <div class="stat-tile t-warn"><div class="tile-label">Replacement</div><div class="tile-val" id="jst-rep">—</div><div class="tile-icon">🔄</div></div>
+        <div class="stat-tile t-pink"><div class="tile-label">Removal</div><div class="tile-val" id="jst-rem">—</div><div class="tile-icon">🗑</div></div>
+        <div class="stat-tile t-green"><div class="tile-label">This Month</div><div class="tile-val" id="jst-month">—</div><div class="tile-icon">📅</div></div>
+      </div>
+
+      <div class="card">
+        <div class="section-head"><div class="section-icon si-cyan">📋</div><div><h2>All Job Orders</h2><p>Click row to expand · Export button for PDF</p></div></div>
+
+        <div class="fp">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+            <span style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--accent)">⚙ Filters</span>
+            <div style="display:flex;gap:8px">
+              <span id="fc-count" style="font-size:10px;color:var(--muted)"></span>
+              <button class="btn btn-ghost btn-sm" onclick="clearFilters()">Clear</button>
+              <button class="btn btn-ghost btn-sm" onclick="loadJOs()">↻ Refresh</button>
+            </div>
+          </div>
+          <div class="fp-row fp-4">
+            <div><div class="dg-l" style="margin-bottom:5px">Search</div><input class="fi" id="f-q" placeholder="Customer, vehicle reg, IMEI, invoice, city, RAC…" oninput="applyFilters()"></div>
+            <div><div class="dg-l" style="margin-bottom:5px">TOC</div>
+              <select class="fi fi-sel" id="f-toc" onchange="applyFilters()"><option value="">All</option><option value="new_installation">New Installation</option><option value="replacement">Replacement</option><option value="removal">Removal</option></select></div>
+            <div><div class="dg-l" style="margin-bottom:5px">Payment</div>
+              <select class="fi fi-sel" id="f-pay" onchange="applyFilters()"><option value="">All</option><option>Cash</option><option>Credit</option><option>Transfer</option></select></div>
+            <div><div class="dg-l" style="margin-bottom:5px">Sales Person</div><input class="fi" id="f-sales" placeholder="Sales…" oninput="applyFilters()"></div>
+          </div>
+          <div class="fp-row fp-5">
+            <div><div class="dg-l" style="margin-bottom:5px">Date From</div><input type="date" class="fi" id="f-from" onchange="applyFilters()"></div>
+            <div><div class="dg-l" style="margin-bottom:5px">Date To</div><input type="date" class="fi" id="f-to" onchange="applyFilters()"></div>
+            <div><div class="dg-l" style="margin-bottom:5px">City</div><input class="fi" id="f-city" placeholder="City…" oninput="applyFilters()"></div>
+            <div><div class="dg-l" style="margin-bottom:5px">Installer</div><input class="fi" id="f-inst" placeholder="Installer…" oninput="applyFilters()"></div>
+            <div><div class="dg-l" style="margin-bottom:5px">Make / Model</div><input class="fi" id="f-make" placeholder="Toyota…" oninput="applyFilters()"></div>
+          </div>
+        </div>
+
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px">
+          <span id="res-info" style="font-size:11px;color:var(--muted)">—</span>
+          <div style="display:flex;align-items:center;gap:8px;font-size:10px;color:var(--muted)">Per page:
+            <select id="pp-sel" onchange="changePP()" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:var(--mono);font-size:11px;padding:5px 10px;outline:none;cursor:pointer">
+              <option value="10">10</option><option value="25" selected>25</option><option value="50">50</option><option value="100">100</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <table><thead><tr>
+            <th onclick="sortJO('date')" style="cursor:pointer">Date <span id="s-date">↓</span></th>
+            <th onclick="sortJO('invoiceNumber')" style="cursor:pointer">Invoice <span id="s-invoiceNumber"></span></th>
+            <th onclick="sortJO('customer')" style="cursor:pointer">Customer <span id="s-customer"></span></th>
+            <th>RAC / Company</th><th>Contact</th>
+            <th onclick="sortJO('vehicle')" style="cursor:pointer">Reg No. <span id="s-vehicle"></span></th>
+            <th>Make / Model</th><th>IMEI</th><th>TOC</th>
+            <th onclick="sortJO('city')" style="cursor:pointer">City <span id="s-city"></span></th>
+            <th>Installer</th><th>Payment</th><th>Actions</th>
+          </tr></thead>
+          <tbody id="jo-tbody"><tr><td colspan="13" style="text-align:center;padding:40px;color:var(--muted)">Switch to this tab to load orders…</td></tr></tbody>
+          </table>
+        </div>
+
+        <div class="pg-bar">
+          <div class="pg-btns" id="pg-btns"></div>
+          <div class="pg-jump">Go to: <input type="number" id="pg-inp" min="1" onkeydown="if(event.key==='Enter')jumpPg()"> <button class="btn btn-ghost btn-sm" onclick="jumpPg()">Go</button></div>
+        </div>
+      </div>
+    </div><!-- /panel-list -->
+
+  </div>
+</div>
+
+<!-- Export modal -->
+<div id="expModal" style="position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:300;display:none;align-items:flex-start;justify-content:center;padding:24px;overflow-y:auto">
+  <div style="width:100%;max-width:820px;margin:auto">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <span style="color:var(--muted);font-size:12px;font-family:var(--mono)">Job Order Export</span>
+      <div style="display:flex;gap:10px">
+        <button class="btn btn-solid" onclick="doPrint()">🖨 Print / PDF</button>
+        <button class="btn btn-ghost" onclick="document.getElementById('expModal').style.display='none'">✕ Close</button>
+      </div>
+    </div>
+    <div id="expContent" style="background:#fff;border-radius:8px;overflow:hidden"></div>
+  </div>
+</div>
+
+<script>
+crmNav('jolist');
+startClock(document.getElementById('clock'));
+
+// ══════════════════════════════════════
+//  TAB SWITCHING
+// ══════════════════════════════════════
+function switchTab(name, btn) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('panel-' + name).classList.add('active');
+  btn.classList.add('active');
+  if (name === 'list' && allJOs.length === 0) loadJOs();
+}
+
+// ══════════════════════════════════════
+//  CUSTOMER LOOKUP
+// ══════════════════════════════════════
+let allCustomers = [], selectedCust = null;
+
+(async function loadCusts(){
+  try { const r = await crmGet({action:'getCustomers'}); allCustomers = r.data||[]; } catch{}
+})();
+
+function searchCustomers(q) {
+  const dd = document.getElementById('custDD');
+  q = (q||'').toLowerCase().trim();
+  if (q.length < 2) { dd.classList.remove('open'); return; }
+  const hits = allCustomers.filter(c =>
+    [c.customerName,c.contact,c.cnic,c.company,c.rac,c.city,c.customerId,c.email]
+      .some(v=>(v||'').toLowerCase().includes(q))
+  ).slice(0,10);
+  if (!hits.length) {
+    dd.innerHTML='<div style="padding:14px;font-size:12px;color:var(--muted);text-align:center">No customers found — add them in the <a href="customers.html" style="color:var(--accent)">Customers</a> tab</div>';
+    dd.classList.add('open'); return;
+  }
+  dd.innerHTML = hits.map((c,i) => `
+    <div class="co" onclick="pickCustomer(${i})">
+      <div class="co-name">${c.customerName||'—'}</div>
+      ${c.company?`<div class="co-company">🏢 ${c.company}${c.rac?' · RAC: '+c.rac:''}</div>`:c.rac?`<div class="co-company">RAC: ${c.rac}</div>`:''}
+      <div class="co-meta">${c.contact||'—'} · ${c.city||'—'}</div>
+      <div class="co-id">${c.customerId||'No ID'}</div>
+    </div>`).join('');
+  dd._hits = hits;
+  dd.classList.add('open');
+}
+
+function pickCustomer(i) {
+  const dd = document.getElementById('custDD');
+  const c = dd._hits ? dd._hits[i] : allCustomers[i];
+  if (!c) return;
+  selectedCust = c;
+  // Fill banner
+  document.getElementById('sb-name').textContent = c.customerName + (c.company?' — '+c.company:'');
+  document.getElementById('sb-meta').textContent = [c.contact,c.city,c.rac?'RAC: '+c.rac:''].filter(Boolean).join(' · ');
+  document.getElementById('sb-id').textContent   = c.customerId||'No ID';
+  document.getElementById('selBanner').classList.add('on');
+  dd.classList.remove('open');
+  document.getElementById('custQ').value = '';
+  // Auto-fill form fields
+  const set = (id,v) => { const el=document.getElementById(id); if(el&&v) el.value=v; };
+  set('f-customer',  c.customerName);
+  set('f-contact',   c.contact);
+  set('f-rac',       c.rac);
+  set('f-reference', c.company);
+  set('f-city',      c.city);
+  set('f-area',      c.area||'');
+  set('f-name',      c.customerName);
+  set('f-cnic',      c.cnic);
+  set('f-father',    c.father);
+  set('f-email',     c.email);
+  set('f-address',   c.address||'');
+}
+
+function clearSelectedCustomer() {
+  selectedCust = null;
+  document.getElementById('selBanner').classList.remove('on');
+  ['sb-name','sb-meta','sb-id'].forEach(id => document.getElementById(id).textContent = '');
+  document.getElementById('custQ').value = '';
+}
+
+// Close dropdown on outside click
+document.addEventListener('click', e => {
+  if (!e.target.closest('.cust-wrap')) document.getElementById('custDD').classList.remove('open');
+});
+
+// ══════════════════════════════════════
+//  9-STEP JO FORM
+// ══════════════════════════════════════
+let curStep = 0;
+const totalSteps = 9;
+const steps = () => document.querySelectorAll('.step-content');
+const dots  = () => document.querySelectorAll('.step-dot');
+
+// Generate JO ID on load
+document.getElementById('joIdBadge').textContent = 'JO-' + Date.now().toString(36).toUpperCase().slice(-8);
+document.getElementById('f-date').valueAsDate = new Date();
+
+function updateStepUI() {
+  steps().forEach((s,i) => s.classList.toggle('active', i===curStep));
+  dots().forEach((d,i) => {
+    d.classList.remove('active','done');
+    if (i===curStep) d.classList.add('active');
+    else if (i<curStep) d.classList.add('done');
+  });
+  const pct = ((curStep+1)/totalSteps)*100;
+  document.getElementById('progressFill').style.width = pct+'%';
+  document.getElementById('stepNum').textContent = curStep+1;
+  document.getElementById('btnBack').style.display    = curStep>0 ? 'inline-flex' : 'none';
+  document.getElementById('btnNext').style.display    = curStep<totalSteps-1 ? 'inline-flex' : 'none';
+  document.getElementById('btnSubmit').style.display  = curStep===totalSteps-1 ? 'inline-block' : 'none';
+}
+
+function goTo(i) { if(i<=curStep){curStep=i;updateStepUI();} }
+function nextStep() { if(curStep<totalSteps-1){curStep++;updateStepUI();} }
+function prevStep() { if(curStep>0){curStep--;updateStepUI();} }
+
+function selectTOC(val, el) {
+  document.querySelectorAll('.toc-btn').forEach(b=>b.classList.remove('selected'));
+  el.classList.add('selected');
+  document.getElementById('tocHidden').value = val;
+}
+
+let lastSubmittedData = {};
+
+async function submitJO() {
+  const check = document.getElementById('confirmCheck');
+  const banner = document.getElementById('joBanner');
+  banner.style.display = 'none';
+  if (!check.checked) {
+    document.querySelector('.checkbox-row').style.borderColor = 'var(--danger)';
+    setTimeout(()=>document.querySelector('.checkbox-row').style.borderColor='',1500);
+    return;
+  }
+  const form = document.getElementById('jobForm');
+  const data = Object.fromEntries(new FormData(form).entries());
+  data.action   = 'submitJobOrder';
+  data.sheetTab = 'Job Orders';
+  if (selectedCust) data.customerId = selectedCust.customerId||'';
+
+  const btn = document.getElementById('btnSubmit');
+  btn.textContent = 'Submitting…'; btn.disabled = true;
+  try {
+    const res = await crmPost(data);
+    if (res.status === 'error') throw new Error(res.message);
+    lastSubmittedData = data;
+    // Show success
+    document.getElementById('jobForm').style.display = 'none';
+    document.querySelector('.nav-bar').style.display  = 'none';
+    document.getElementById('successScreen').classList.add('active');
+    banner.style.display = 'none';
+  } catch(err) {
+    btn.textContent = 'Submit Order'; btn.disabled = false;
+    banner.textContent = '⚠ ' + (err.message||'Submission failed — check connection');
+    banner.style.display = 'block';
+  }
+}
+
+function resetJOForm() {
+  document.getElementById('jobForm').reset();
+  document.getElementById('jobForm').style.display = 'block';
+  document.querySelector('.nav-bar').style.display  = 'flex';
+  document.getElementById('successScreen').classList.remove('active');
+  document.querySelectorAll('.toc-btn').forEach(b=>b.classList.remove('selected'));
+  document.getElementById('tocHidden').value = '';
+  document.getElementById('btnSubmit').textContent = 'Submit Order';
+  document.getElementById('btnSubmit').disabled = false;
+  document.getElementById('joBanner').style.display = 'none';
+  clearSelectedCustomer();
+  curStep = 0; updateStepUI();
+  document.getElementById('joIdBadge').textContent = 'JO-'+Date.now().toString(36).toUpperCase().slice(-8);
+  document.getElementById('f-date').valueAsDate = new Date();
+}
+
+function exportLastJO() { buildExport(lastSubmittedData); }
+
+updateStepUI();
+
+// ══════════════════════════════════════
+//  ALL JOs LIST
+// ══════════════════════════════════════
+let allJOs=[],filteredJOs=[],curPage=1,perPage=25,sKey='date',sDir='desc';
+
+async function loadJOs() {
+  const tb=document.getElementById('jo-tbody');
+  tb.innerHTML='<tr><td colspan="13" style="text-align:center;padding:40px;color:var(--muted)">Loading…</td></tr>';
+  try {
+    const res=await crmGet({action:'getJobOrders'});
+    allJOs=res.data||[];
+    updateStats(allJOs); applyFilters();
+  } catch(err) {
+    tb.innerHTML='<tr><td colspan="13" style="text-align:center;padding:30px;color:var(--danger)">⚠ '+(err.message||'Could not load')+'</td></tr>';
+  }
+}
+
+function updateStats(d) {
+  const now=new Date(),m=now.getMonth(),y=now.getFullYear();
+  document.getElementById('jst-total').textContent=d.length;
+  document.getElementById('jst-new').textContent=d.filter(r=>r.toc==='new_installation').length;
+  document.getElementById('jst-rep').textContent=d.filter(r=>r.toc==='replacement').length;
+  document.getElementById('jst-rem').textContent=d.filter(r=>r.toc==='removal').length;
+  document.getElementById('jst-month').textContent=d.filter(r=>{
+    if(!r.date)return false;const d2=new Date(r.date);return d2.getMonth()===m&&d2.getFullYear()===y;
+  }).length;
+}
+
+function applyFilters() {
+  const q  =(document.getElementById('f-q').value||'').toLowerCase().trim();
+  const toc= document.getElementById('f-toc').value;
+  const pay= document.getElementById('f-pay').value;
+  const sal=(document.getElementById('f-sales').value||'').toLowerCase().trim();
+  const cit=(document.getElementById('f-city').value||'').toLowerCase().trim();
+  const ins=(document.getElementById('f-inst').value||'').toLowerCase().trim();
+  const mk =(document.getElementById('f-make').value||'').toLowerCase().trim();
+  const frm= document.getElementById('f-from').value;
+  const to = document.getElementById('f-to').value;
+  filteredJOs=allJOs.filter(r=>{
+    const mq=!q||[r.customer,r.vehicle,r.imei,r.invoiceNumber,r.city,r.contact,r.name,r.engine,r.chassis,r.gsm,r.rac,r.reference].some(v=>(v||'').toLowerCase().includes(q));
+    const mt=!toc||r.toc===toc, mp=!pay||r.payment===pay, ms=!sal||(r.sales||'').toLowerCase().includes(sal);
+    const mc=!cit||(r.city||'').toLowerCase().includes(cit), mi=!ins||(r.installer||'').toLowerCase().includes(ins);
+    const mm=!mk||[(r.make||''),(r.model||'')].join(' ').toLowerCase().includes(mk);
+    let mf=true,mt2=true;
+    if(frm||to){const d=r.date?new Date(r.date):null;if(d){if(frm)mf=d>=new Date(frm);if(to)mt2=d<=new Date(to+'T23:59:59');}else mf=mt2=false;}
+    return mq&&mt&&mp&&ms&&mc&&mi&&mm&&mf&&mt2;
+  });
+  filteredJOs.sort((a,b)=>{
+    let av=a[sKey]||'',bv=b[sKey]||'';
+    if(sKey==='date'){av=av?new Date(av).getTime():0;bv=bv?new Date(bv).getTime():0;return sDir==='asc'?av-bv:bv-av;}
+    av=av.toString().toLowerCase();bv=bv.toString().toLowerCase();return sDir==='asc'?av.localeCompare(bv):bv.localeCompare(av);
+  });
+  const ac=[toc,pay,sal,cit,ins,mk,frm,to,q].filter(Boolean).length;
+  const fc=document.getElementById('fc-count');
+  if(fc)fc.textContent=ac>0?ac+' filter'+(ac>1?'s':'')+' active':'';
+  curPage=1;renderPage();
+}
+
+function clearFilters(){['f-q','f-toc','f-pay','f-sales','f-city','f-inst','f-make','f-from','f-to'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});applyFilters();}
+
+function sortJO(key){
+  if(sKey===key)sDir=sDir==='asc'?'desc':'asc';else{sKey=key;sDir='asc';}
+  document.querySelectorAll('[id^="s-"]').forEach(e=>e.textContent='');
+  const el=document.getElementById('s-'+key);if(el)el.textContent=sDir==='asc'?' ↑':' ↓';
+  applyFilters();
+}
+
+function renderPage() {
+  const tb=document.getElementById('jo-tbody');
+  const total=filteredJOs.length,pages=Math.max(1,Math.ceil(total/perPage));
+  curPage=Math.min(curPage,pages);
+  const start=(curPage-1)*perPage,slice=filteredJOs.slice(start,start+perPage);
+  const ri=document.getElementById('res-info');
+  if(ri)ri.textContent=total===0?'No results':'Showing '+(start+1)+'–'+Math.min(start+perPage,total)+' of '+total+' orders';
+  if(!slice.length){tb.innerHTML='<tr><td colspan="13"><div class="empty-state"><div class="ei">📋</div><p>No orders match</p></div></td></tr>';renderPg(0,1);return;}
+  tb.innerHTML=slice.map(r=>{
+    const gi=allJOs.indexOf(r);
+    const tCls=r.toc==='new_installation'?'toc-new':r.toc==='replacement'?'toc-rep':'toc-rem';
+    const tLbl=r.toc==='new_installation'?'New Install':r.toc==='replacement'?'Replacement':'Removal';
+    const company=[r.rac,r.reference].filter(Boolean).join(' / ')||'—';
+    return `<tr class="jo-row" id="jr-${gi}" onclick="toggleRow(${gi},this)">
+      <td class="td-muted">${r.date||'—'}</td>
+      <td style="font-family:var(--mono);color:var(--accent);font-size:11px">${r.invoiceNumber||'—'}</td>
+      <td><strong>${r.customer||'—'}</strong></td>
+      <td class="td-muted" style="font-size:11px;max-width:110px;overflow:hidden;text-overflow:ellipsis">${company}</td>
+      <td class="td-muted">${r.contact||'—'}</td>
+      <td style="font-family:var(--mono);font-size:11px">${r.vehicle||'—'}</td>
+      <td class="td-muted">${[r.make,r.model].filter(Boolean).join(' ')||'—'}</td>
+      <td style="font-family:var(--mono);font-size:10px;color:var(--muted)">${r.imei||'—'}</td>
+      <td><span class="badge ${tCls}" style="font-size:9px">${tLbl}</span></td>
+      <td class="td-muted">${r.city||'—'}</td>
+      <td class="td-muted">${r.installer||'—'}</td>
+      <td class="td-muted">${r.payment||'—'}</td>
+      <td onclick="event.stopPropagation()" style="white-space:nowrap">
+        <button class="btn btn-ghost btn-sm" onclick="exportJO(${gi})" style="font-size:10px;padding:4px 10px">⬇ PDF</button>
+      </td>
+    </tr>
+    <tr class="jo-det" id="jd-${gi}"><td colspan="13"><div class="det-inner" id="jdi-${gi}"></div></td></tr>`;
+  }).join('');
+  renderPg(total,pages);
+}
+
+function toggleRow(gi,row) {
+  const det=document.getElementById('jd-'+gi),inner=document.getElementById('jdi-'+gi);
+  if(det.classList.contains('open')){det.classList.remove('open');row.classList.remove('expanded');return;}
+  document.querySelectorAll('.jo-det.open').forEach(d=>d.classList.remove('open'));
+  document.querySelectorAll('.jo-row.expanded').forEach(r2=>r2.classList.remove('expanded'));
+  row.classList.add('expanded');det.classList.add('open');
+  const r=allJOs[gi];
+  const f=(l,v)=>`<div class="dg-cell"><div class="dg-l">${l}</div><div class="dg-v">${v||'—'}</div></div>`;
+  inner.innerHTML=`
+    <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--accent);margin-bottom:12px">Full Details — ${r.invoiceNumber||'JO'}</div>
+    <div class="det-grid">
+      ${f('Invoice',r.invoiceNumber)}${f('Date',r.date)}${f('TOC',r.toc)}${f('Sales',r.sales)}
+      ${f('Customer',r.customer)}${f('RAC',r.rac)}${f('Company',r.reference)}${f('Contact',r.contact)}
+      ${f('Package',r.package)}${f('AMC',r.amc)}${f('Payment',r.payment)}${f('Receipt',r.receipt)}
+      ${f('Vehicle',r.vehicle)}${f('Make',r.make)}${f('Model',r.model)}${f('Color',r.color)}
+      ${f('Engine',r.engine)}${f('Chassis',r.chassis)}${f('IMEI',r.imei)}${f('Serial',r.serial)}
+      ${f('GSM',r.gsm)}${f('Module',r.module)}${f('Installer',r.installer)}${f('Test Officer',r.testingOfficer)}
+      ${f('Pre Pack',r.prepack)}${f('Post Pack',r.postpack)}${f('Cut Off',r.cutoff)}${f('Install City',r.installCity)}
+      ${f('Username',r.username)}${f('SMS Number',r.smsNumber)}${f('License',r.license)}${f('Committed',r.commitDate)}
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn btn-primary btn-sm" onclick="exportJO(${gi})">⬇ Export PDF</button>
+      <button class="btn btn-ghost btn-sm" onclick="switchTab('new',document.getElementById('tab-new'))">＋ New Order</button>
+    </div>`;
+}
+
+function renderPg(total,pages){
+  const bar=document.getElementById('pg-btns');if(!bar)return;
+  if(total===0){bar.innerHTML='';return;}
+  const b=(lbl,pg,dis,act)=>`<button class="pgb${act?' act':''}" onclick="goPg(${pg})" ${dis?'disabled':''}>${lbl}</button>`;
+  let h=b('‹',curPage-1,curPage===1,false);
+  const s=Math.max(1,curPage-2),e=Math.min(pages,curPage+2);
+  if(s>1){h+=b('1',1,false,false);if(s>2)h+='<span style="color:var(--muted);padding:0 3px;font-size:11px">…</span>';}
+  for(let p=s;p<=e;p++)h+=b(p,p,false,p===curPage);
+  if(e<pages){if(e<pages-1)h+='<span style="color:var(--muted);padding:0 3px;font-size:11px">…</span>';h+=b(pages,pages,false,false);}
+  h+=b('›',curPage+1,curPage===pages,false);
+  bar.innerHTML=h;const ji=document.getElementById('pg-inp');if(ji){ji.value=curPage;ji.max=pages;}
+}
+function goPg(p){curPage=p;renderPage();window.scrollTo({top:0,behavior:'smooth'});}
+function jumpPg(){const p=parseInt(document.getElementById('pg-inp').value),pg=Math.ceil(filteredJOs.length/perPage);if(p>=1&&p<=pg)goPg(p);}
+function changePP(){perPage=parseInt(document.getElementById('pp-sel').value);curPage=1;renderPage();}
+
+// ══════════════════════════════════════
+//  PDF EXPORT
+// ══════════════════════════════════════
+function exportJO(gi){ buildExport(allJOs[gi]); }
+
+function buildExport(d) {
+  if(!d)return;
+  const now=new Date().toLocaleDateString('en-PK',{year:'numeric',month:'long',day:'numeric'});
+  const s=v=>v||'—';
+  const sec=(t,pairs)=>{
+    const rows=[];
+    for(let i=0;i<pairs.length;i+=2){
+      const[l1,v1]=pairs[i],[l2,v2]=pairs[i+1]||['',''];
+      rows.push(`<tr><td style="font-size:9px;letter-spacing:1px;text-transform:uppercase;color:#888;padding:7px 10px 7px 0;border-bottom:1px solid #f0f0f0;width:17%">${l1}</td><td style="font-size:12px;color:#111;padding:7px 16px 7px 0;border-bottom:1px solid #f0f0f0;width:33%;font-weight:500">${v1}</td><td style="font-size:9px;letter-spacing:1px;text-transform:uppercase;color:#888;padding:7px 10px 7px 0;border-bottom:1px solid #f0f0f0;width:17%">${l2}</td><td style="font-size:12px;color:#111;padding:7px 0;border-bottom:1px solid #f0f0f0;width:33%;font-weight:500">${v2}</td></tr>`);
+    }
+    return `<div style="margin-bottom:16px"><div style="background:#0d1b2a;color:#38d9f5;font-size:9px;letter-spacing:2px;text-transform:uppercase;padding:7px 12px;border-radius:5px 5px 0 0;font-weight:600">${t}</div><table width="100%" style="border:1px solid #e2e8f0;border-top:none;padding:4px 12px;background:#fff;border-radius:0 0 5px 5px">${rows.join('')}</table></div>`;
+  };
+  document.getElementById('expContent').innerHTML=`<div style="font-family:'Segoe UI',Arial,sans-serif;color:#111;padding:32px 36px;font-size:12px;line-height:1.6">
+    <table width="100%" style="margin-bottom:22px;border-bottom:3px solid #0d1b2a;padding-bottom:16px"><tr>
+      <td><div style="font-size:22px;font-weight:800;color:#0d1b2a">Fleet<span style="color:#0ea5e9">CRM</span></div><div style="font-size:10px;color:#666;letter-spacing:2px;text-transform:uppercase;margin-top:2px">Vehicle Tracking Job Order</div></td>
+      <td style="text-align:right"><div style="font-size:11px;color:#666">Invoice No.</div><div style="font-size:20px;font-weight:700;color:#0d1b2a">${s(d.invoiceNumber)}</div><div style="font-size:10px;color:#888;margin-top:3px">Printed: ${now}</div></td>
+    </tr></table>
+    ${sec('Customer Details',[['Date',s(d.date)],['Invoice',s(d.invoiceNumber)],['Customer',s(d.customer)],['Contact',s(d.contact)],['RAC / Group',s(d.rac)],['Company',s(d.reference)],['City',s(d.city)],['Area',s(d.area)],['Service Call',s(d.serviceCall)],[' ',' ']])}
+    ${sec('Sales / Accounts',[['TOC',s(d.toc)],['Sales Person',s(d.sales)],['Package',s(d.package)],['AMC',s(d.amc)],['Payment',s(d.payment)],['Receipt',s(d.receipt)],['Committed Date',s(d.commitDate)],[' ',' ']])}
+    ${sec('Device — New',[['IMEI',s(d.imei)],['Serial',s(d.serial)],['GSM / SIM',s(d.gsm)],['Module',s(d.module)]])}
+    ${(d.oldimei||d.oldserial)?sec('Device — Old',[['IMEI (Old)',s(d.oldimei)],['Serial (Old)',s(d.oldserial)],['GSM (Old)',s(d.oldgsm)],['Module (Old)',s(d.oldmodule)]]):''}
+    ${sec('Vehicle',[['Reg. No.',s(d.vehicle)],['Engine',s(d.engine)],['Chassis',s(d.chassis)],[' ',' '],['Make',s(d.make)],['Model',s(d.model)],['Color',s(d.color)],[' ',' ']])}
+    ${sec('Installation',[['Testing Officer',s(d.testingOfficer)],['Installer',s(d.installer)],['Pre Pack',s(d.prepack)],['Post Pack',s(d.postpack)],['Cut Off',s(d.cutoff)],['Install City',s(d.installCity)]])}
+    ${sec('Credentials',[['Username',s(d.username)],['Password',s(d.password)],['SMS Number',s(d.smsNumber)],['License Key',s(d.license)],['SMS Type',s(d.smsType)],['Fence City',s(d.fenceCity)]])}
+    ${sec('Customer Credentials',[['Full Name',s(d.name)],['CNIC',s(d.cnic)],['Father Name',s(d.father)],['Email',s(d.email)],['1st User',s(d.user1)],['2nd User',s(d.user2)],['3rd User',s(d.user3)],['P/E Code',s(d.pcode)+' / '+s(d.ecode)]])}
+    <table width="100%" style="margin-bottom:14px"><tr><td style="background:#f8fafc;border-radius:6px;padding:12px 14px;font-size:11px;color:#444;border:1px solid #e2e8f0"><strong style="display:block;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:#888;margin-bottom:3px">Address</strong>${s(d.address)}</td></tr></table>
+    ${d.disclaimer?`<table width="100%" style="margin-bottom:18px"><tr><td style="background:#f8fafc;border-radius:6px;padding:12px 14px;font-size:11px;color:#444;border:1px solid #e2e8f0"><strong style="display:block;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:#888;margin-bottom:3px">Disclaimer</strong>${s(d.disclaimer)}</td></tr></table>`:''}
+    <table width="100%" style="margin-top:28px;border-top:1px solid #e2e8f0;padding-top:20px"><tr>
+      <td width="33%" style="text-align:center;padding:0 10px"><div style="border-top:1px solid #ccc;margin-top:38px;padding-top:7px;font-size:10px;color:#888">Customer Signature</div></td>
+      <td width="33%" style="text-align:center;padding:0 10px"><div style="border-top:1px solid #ccc;margin-top:38px;padding-top:7px;font-size:10px;color:#888">Installer Signature</div></td>
+      <td width="33%" style="text-align:center;padding:0 10px"><div style="border-top:1px solid #ccc;margin-top:38px;padding-top:7px;font-size:10px;color:#888">Authorized Officer</div></td>
+    </tr></table>
+    <div style="text-align:center;margin-top:18px;font-size:9px;color:#bbb;letter-spacing:1px;text-transform:uppercase;border-top:1px solid #f0f0f0;padding-top:12px">FleetCRM · ${s(d.invoiceNumber)} · ${now}</div>
+  </div>`;
+  document.getElementById('expModal').style.display='flex';
+}
+
+function doPrint(){
+  const w=window.open('','_blank','width=900,height=700');
+  w.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Job Order</title><style>body{margin:0}@media print{@page{margin:15mm}}</style></head><body>'+document.getElementById('expContent').innerHTML+'</body></html>');
+  w.document.close();w.focus();setTimeout(()=>w.print(),400);
+}
+document.getElementById('expModal').addEventListener('click',e=>{if(e.target===document.getElementById('expModal'))document.getElementById('expModal').style.display='none';});
+</script>
+</body>
+</html>
