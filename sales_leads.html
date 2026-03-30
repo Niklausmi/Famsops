@@ -280,11 +280,12 @@ body::after {
 }
 
 .status-pill:hover { color: var(--text); border-color: rgba(255,255,255,0.15); }
-.status-pill.s-pending.selected   { background: rgba(56,217,245,0.1);  border-color: rgba(56,217,245,0.4);  color: var(--accent); }
-.status-pill.s-followup.selected  { background: rgba(255,179,71,0.1);  border-color: rgba(255,179,71,0.4);  color: var(--warn); }
-.status-pill.s-confirmed.selected { background: rgba(123,111,255,0.12);border-color: rgba(123,111,255,0.4); color: var(--accent2); }
-.status-pill.s-installed.selected { background: rgba(61,255,160,0.1);  border-color: rgba(61,255,160,0.4);  color: var(--success); }
-.status-pill.s-cancelled.selected { background: rgba(90,96,112,0.2);   border-color: rgba(90,96,112,0.4);   color: var(--muted); }
+.status-pill.s-new.selected         { background: rgba(56,217,245,0.1);  border-color: rgba(56,217,245,0.4);  color: var(--accent); }
+.status-pill.s-contacted.selected   { background: rgba(123,111,255,0.1); border-color: rgba(123,111,255,0.4); color: var(--accent2); }
+.status-pill.s-interested.selected  { background: rgba(255,179,71,0.1);  border-color: rgba(255,179,71,0.4);  color: var(--warn); }
+.status-pill.s-negotiation.selected { background: rgba(255,126,179,0.1); border-color: rgba(255,126,179,0.4); color: var(--accent3); }
+.status-pill.s-won.selected         { background: rgba(61,255,160,0.1);  border-color: rgba(61,255,160,0.4);  color: var(--success); }
+.status-pill.s-lost.selected        { background: rgba(90,96,112,0.2);   border-color: rgba(90,96,112,0.4);   color: var(--muted); }
 
 input[name="status"] { display: none; }
 
@@ -490,16 +491,34 @@ tbody td {
 
 .badge::before { content: ''; width: 5px; height: 5px; border-radius: 50%; }
 
-.badge-pending   { background: rgba(56,217,245,0.1);  color: var(--accent);  }
-.badge-pending::before   { background: var(--accent); }
-.badge-followup  { background: rgba(255,179,71,0.1);  color: var(--warn);    }
-.badge-followup::before  { background: var(--warn); }
-.badge-confirmed { background: rgba(123,111,255,0.12);color: var(--accent2); }
-.badge-confirmed::before { background: var(--accent2); }
-.badge-installed { background: rgba(61,255,160,0.1);  color: var(--success); }
-.badge-installed::before { background: var(--success); }
-.badge-cancelled { background: rgba(90,96,112,0.15);  color: var(--muted);   }
-.badge-cancelled::before { background: var(--muted); }
+/* Lead Status badges */
+.badge-new         { background: rgba(56,217,245,0.1);  color: var(--accent);  }
+.badge-new::before         { background: var(--accent); }
+.badge-contacted   { background: rgba(123,111,255,0.12);color: var(--accent2); }
+.badge-contacted::before   { background: var(--accent2); }
+.badge-interested  { background: rgba(255,179,71,0.1);  color: var(--warn);    }
+.badge-interested::before  { background: var(--warn); }
+.badge-negotiation { background: rgba(255,126,179,0.1); color: var(--accent3); }
+.badge-negotiation::before { background: var(--accent3); }
+.badge-won         { background: rgba(61,255,160,0.1);  color: var(--success); }
+.badge-won::before         { background: var(--success); }
+.badge-lost        { background: rgba(90,96,112,0.15);  color: var(--muted);   }
+.badge-lost::before        { background: var(--muted); }
+/* Install Status badges */
+.badge-notassigned { background: rgba(90,96,112,0.15);  color: var(--muted);   }
+.badge-notassigned::before { background: var(--muted); }
+.badge-assigned    { background: rgba(56,217,245,0.1);  color: var(--accent);  }
+.badge-assigned::before    { background: var(--accent); }
+.badge-scheduled   { background: rgba(123,111,255,0.12);color: var(--accent2); }
+.badge-scheduled::before   { background: var(--accent2); }
+.badge-inprogress  { background: rgba(255,179,71,0.1);  color: var(--warn);    }
+.badge-inprogress::before  { background: var(--warn); }
+.badge-completed   { background: rgba(61,255,160,0.1);  color: var(--success); }
+.badge-completed::before   { background: var(--success); }
+.badge-onhold      { background: rgba(255,126,179,0.1); color: var(--accent3); }
+.badge-onhold::before      { background: var(--accent3); }
+.badge-failed      { background: rgba(255,95,109,0.1);  color: var(--danger);  }
+.badge-failed::before      { background: var(--danger); }
 
 /* Empty state */
 .empty-state {
@@ -512,7 +531,7 @@ tbody td {
 /* Stats bar */
 .stats-bar {
   display: grid;
-  grid-template-columns: repeat(6, 1fr);
+  grid-template-columns: repeat(7, 1fr);
   gap: 10px;
   margin-bottom: 24px;
 }
@@ -540,12 +559,13 @@ tbody td {
   color: var(--muted);
 }
 
-.num-total     { color: var(--text); }
-.num-pending   { color: var(--accent); }
-.num-followup  { color: var(--warn); }
-.num-confirmed { color: var(--accent2); }
-.num-installed { color: var(--success); }
-.num-cancelled { color: var(--muted); }
+.num-total       { color: var(--text); }
+.num-new         { color: var(--accent); }
+.num-contacted   { color: var(--accent2); }
+.num-interested  { color: var(--warn); }
+.num-negotiation { color: var(--accent3); }
+.num-won         { color: var(--success); }
+.num-lost        { color: var(--muted); }
 
 /* Success screen */
 .success-screen {
@@ -693,6 +713,29 @@ document.head.insertAdjacentHTML('beforeend', CRM_STYLE);
               </select>
             </div>
             <div class="field">
+              <label>Purchase Timeline</label>
+              <select name="purchaseTimeline">
+                <option value="">Select…</option>
+                <option>Immediately</option>
+                <option>Within 1 week</option>
+                <option>Within 1 month</option>
+                <option>1–3 months</option>
+                <option>3+ months</option>
+                <option>Just exploring</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Preferred Payment Method</label>
+              <select name="preferredPayment">
+                <option value="">Select…</option>
+                <option>Cash</option>
+                <option>Bank Transfer</option>
+                <option>Cheque</option>
+                <option>Online / Mobile</option>
+                <option>Credit / Installment</option>
+              </select>
+            </div>
+            <div class="field">
               <label>Follow-up Date</label>
               <input type="date" name="followUpDate">
             </div>
@@ -703,11 +746,12 @@ document.head.insertAdjacentHTML('beforeend', CRM_STYLE);
           <div class="field">
             <label>Current Status</label>
             <div class="status-options">
-              <div class="status-pill s-pending"   onclick="selectPill('status','Pending',   this)">🔵 Pending</div>
-              <div class="status-pill s-followup"  onclick="selectPill('status','Follow Up', this)">🟡 Follow Up</div>
-              <div class="status-pill s-confirmed" onclick="selectPill('status','Confirmed', this)">🟣 Confirmed</div>
-              <div class="status-pill s-installed" onclick="selectPill('status','Installed', this)">🟢 Installed</div>
-              <div class="status-pill s-cancelled" onclick="selectPill('status','Cancelled', this)">⚫ Cancelled</div>
+              <div class="status-pill s-new"         onclick="selectPill('status','New Lead',     this)">🔵 New Lead</div>
+              <div class="status-pill s-contacted"   onclick="selectPill('status','Contacted',    this)">🟣 Contacted</div>
+              <div class="status-pill s-interested"  onclick="selectPill('status','Interested',   this)">🟡 Interested</div>
+              <div class="status-pill s-negotiation" onclick="selectPill('status','Negotiation',  this)">🩷 Negotiation</div>
+              <div class="status-pill s-won"         onclick="selectPill('status','Won',          this)">🟢 Won</div>
+              <div class="status-pill s-lost"        onclick="selectPill('status','Lost',         this)">⚫ Lost</div>
             </div>
             <input type="hidden" name="status" id="statusHidden">
           </div>
@@ -734,7 +778,7 @@ document.head.insertAdjacentHTML('beforeend', CRM_STYLE);
           <div class="grid-2">
             <div class="field">
               <label>Assigned Sales Person</label>
-              <input name="salesPerson" placeholder="Name of sales rep">
+              <input name="salesPerson" id="salesPersonInput" placeholder="Name of sales rep" disabled>
             </div>
             <div class="field">
               <label>Date Forwarded</label>
@@ -785,26 +829,97 @@ document.head.insertAdjacentHTML('beforeend', CRM_STYLE);
 
       <!-- Stats -->
       <div class="stats-bar">
-        <div class="stat-card"><div class="num num-total"     id="st-total">—</div><div class="lbl">Total</div></div>
-        <div class="stat-card"><div class="num num-pending"   id="st-pending">—</div><div class="lbl">Pending</div></div>
-        <div class="stat-card"><div class="num num-followup"  id="st-followup">—</div><div class="lbl">Follow Up</div></div>
-        <div class="stat-card"><div class="num num-confirmed" id="st-confirmed">—</div><div class="lbl">Confirmed</div></div>
-        <div class="stat-card"><div class="num num-installed" id="st-installed">—</div><div class="lbl">Installed</div></div>
-        <div class="stat-card"><div class="num num-cancelled" id="st-cancelled">—</div><div class="lbl">Cancelled</div></div>
+        <div class="stat-card"><div class="num num-total"       id="st-total">—</div><div class="lbl">Total</div></div>
+        <div class="stat-card"><div class="num num-new"         id="st-new">—</div><div class="lbl">New Lead</div></div>
+        <div class="stat-card"><div class="num num-contacted"   id="st-contacted">—</div><div class="lbl">Contacted</div></div>
+        <div class="stat-card"><div class="num num-interested"  id="st-interested">—</div><div class="lbl">Interested</div></div>
+        <div class="stat-card"><div class="num num-negotiation" id="st-negotiation">—</div><div class="lbl">Negotiation</div></div>
+        <div class="stat-card"><div class="num num-won"         id="st-won">—</div><div class="lbl">Won</div></div>
+        <div class="stat-card"><div class="num num-lost"        id="st-lost">—</div><div class="lbl">Lost</div></div>
       </div>
 
-      <!-- Controls -->
-      <div class="table-controls">
-        <input class="search-box" id="searchBox" placeholder="Search by name, contact, sales person…" oninput="filterTable()">
-        <select class="filter-select" id="filterStatus" onchange="filterTable()">
-          <option value="">All Lead Statuses</option>
-          <option>Pending</option><option>Follow Up</option><option>Confirmed</option><option>Installed</option><option>Cancelled</option>
-        </select>
-        <select class="filter-select" id="filterInstall" onchange="filterTable()">
-          <option value="">All Install Status</option>
-          <option>Pending</option><option>Installed</option><option>Cancelled</option>
-        </select>
-        <button class="btn btn-ghost" onclick="loadLeads()" style="white-space:nowrap;">↻ Refresh</button>
+      <!-- Advanced Filters -->
+      <div id="filterPanel" style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:18px 20px;margin-bottom:16px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+          <span style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--accent)">⚙ Filters &amp; Search</span>
+          <div style="display:flex;gap:8px;align-items:center">
+            <span id="filterCount" style="font-size:10px;color:var(--muted)"></span>
+            <button class="btn btn-ghost btn-sm" onclick="clearAllFilters()">Clear All</button>
+            <button class="btn btn-ghost btn-sm" onclick="loadLeads()">↻ Refresh</button>
+          </div>
+        </div>
+
+        <!-- Row 1: Search + Status filters -->
+        <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:10px;margin-bottom:10px">
+          <div>
+            <div style="font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:5px">Search</div>
+            <input class="search-box" id="searchBox" placeholder="Name, contact, city, sales person, package…" oninput="filterTable()" style="width:100%">
+          </div>
+          <div>
+            <div style="font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:5px">Lead Status</div>
+            <select class="filter-select" id="filterStatus" onchange="filterTable()" style="width:100%">
+              <option value="">All Lead Statuses</option>
+              <option>New Lead</option><option>Contacted</option><option>Interested</option><option>Negotiation</option><option>Won</option><option>Lost</option>
+            </select>
+          </div>
+          <div>
+            <div style="font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:5px">Install Status</div>
+            <select class="filter-select" id="filterInstall" onchange="filterTable()" style="width:100%">
+              <option value="">All</option>
+              <option>Not Assigned</option><option>Assigned</option><option>Scheduled</option><option>In Progress</option><option>Completed</option><option>On Hold</option><option>Failed</option>
+            </select>
+          </div>
+          <div>
+            <div style="font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:5px">Payment Status</div>
+            <select class="filter-select" id="filterPayment" onchange="filterTable()" style="width:100%">
+              <option value="">All</option>
+              <option>Unpaid</option><option>Partial</option><option>Paid</option><option>Refunded</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Row 2: Date + City + Sales Person + Source -->
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr;gap:10px">
+          <div>
+            <div style="font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:5px">Date From</div>
+            <input type="date" id="filterDateFrom" onchange="filterTable()" style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--mono);font-size:11px;padding:8px 10px;outline:none;transition:border-color 0.2s" onfocus="this.style.borderColor='rgba(56,217,245,0.4)'" onblur="this.style.borderColor='rgba(255,255,255,0.07)'">
+          </div>
+          <div>
+            <div style="font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:5px">Date To</div>
+            <input type="date" id="filterDateTo" onchange="filterTable()" style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--mono);font-size:11px;padding:8px 10px;outline:none;transition:border-color 0.2s" onfocus="this.style.borderColor='rgba(56,217,245,0.4)'" onblur="this.style.borderColor='rgba(255,255,255,0.07)'">
+          </div>
+          <div>
+            <div style="font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:5px">City</div>
+            <input id="filterCity" placeholder="Filter by city…" oninput="filterTable()" style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--mono);font-size:11px;padding:8px 10px;outline:none;transition:border-color 0.2s" onfocus="this.style.borderColor='rgba(56,217,245,0.4)'" onblur="this.style.borderColor='rgba(255,255,255,0.07)'" style="color:var(--text)">
+          </div>
+          <div>
+            <div style="font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:5px">Sales Person</div>
+            <input id="filterSales" placeholder="Filter by sales person…" oninput="filterTable()" style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--mono);font-size:11px;padding:8px 10px;outline:none;transition:border-color 0.2s" onfocus="this.style.borderColor='rgba(56,217,245,0.4)'" onblur="this.style.borderColor='rgba(255,255,255,0.07)'">
+          </div>
+          <div>
+            <div style="font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:5px">Source</div>
+            <select id="filterSource" onchange="filterTable()" style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:8px;color:var(--muted);font-family:var(--mono);font-size:11px;padding:8px 28px 8px 10px;outline:none;cursor:pointer;appearance:none;background-image:url('data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2710%27 height=%276%27%3E%3Cpath fill=%27%235a6070%27 d=%27M5 6L0 0h10z%27/%3E%3C/svg%3E');background-repeat:no-repeat;background-position:right 8px center">
+              <option value="">All Sources</option>
+              <option>Referral</option><option>Walk-in</option><option>Social Media</option>
+              <option>WhatsApp</option><option>Cold Call</option><option>Website</option>
+              <option>Existing Client</option><option>Other</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Results info + per-page -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px">
+        <span id="resultsInfo" style="font-size:11px;color:var(--muted)">—</span>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:10px;color:var(--muted)">Per page:</span>
+          <select id="perPageSel" onchange="changePerPage()" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:var(--mono);font-size:11px;padding:5px 10px;outline:none;cursor:pointer">
+            <option value="10">10</option>
+            <option value="25" selected>25</option>
+            <option value="50">50</option>
+            <option value="100">100</option>
+          </select>
+        </div>
       </div>
 
       <!-- Table -->
@@ -812,15 +927,34 @@ document.head.insertAdjacentHTML('beforeend', CRM_STYLE);
         <table id="leadsTable">
           <thead>
             <tr>
-                <th>Date</th><th>Customer</th><th>Contact</th><th>City</th>
-                <th>Package</th><th>Lead Status</th><th>Install Status</th><th>Payment</th>
-                <th>Source</th><th>Sales Person</th><th>Follow-up</th><th>Actions</th>
-              </tr>
+              <th onclick="sortTable('dateForwarded')" style="cursor:pointer;user-select:none">Date <span id="sort-dateForwarded"></span></th>
+              <th onclick="sortTable('customerName')" style="cursor:pointer;user-select:none">Customer <span id="sort-customerName"></span></th>
+              <th>Contact</th>
+              <th onclick="sortTable('city')" style="cursor:pointer;user-select:none">City <span id="sort-city"></span></th>
+              <th>Package</th>
+              <th onclick="sortTable('status')" style="cursor:pointer;user-select:none">Lead Status <span id="sort-status"></span></th>
+              <th>Install Status</th>
+              <th onclick="sortTable('paymentStatus')" style="cursor:pointer;user-select:none">Payment <span id="sort-paymentStatus"></span></th>
+              <th>Source</th>
+              <th onclick="sortTable('salesPerson')" style="cursor:pointer;user-select:none">Sales Person <span id="sort-salesPerson"></span></th>
+              <th onclick="sortTable('followUpDate')" style="cursor:pointer;user-select:none">Follow-up <span id="sort-followUpDate"></span></th>
+              <th>Actions</th>
+            </tr>
           </thead>
           <tbody id="leadsBody">
-            <tr class="loading-row"><td colspan="11">Click Refresh to load leads from Google Sheets…</td></tr>
+            <tr class="loading-row"><td colspan="12">Click Refresh to load leads from Google Sheets…</td></tr>
           </tbody>
         </table>
+      </div>
+
+      <!-- Pagination bar -->
+      <div id="paginationBar" style="display:flex;align-items:center;justify-content:space-between;margin-top:16px;flex-wrap:wrap;gap:10px">
+        <div style="display:flex;align-items:center;gap:6px" id="paginationBtns"></div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:10px;color:var(--muted)">Go to page:</span>
+          <input type="number" id="pageJumpInput" min="1" style="width:56px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:var(--mono);font-size:11px;padding:5px 8px;outline:none;text-align:center" onkeydown="if(event.key==='Enter')jumpToPage()">
+          <button class="btn btn-ghost btn-sm" onclick="jumpToPage()">Go</button>
+        </div>
       </div>
 
     </div><!-- /panel-leads -->
@@ -853,6 +987,16 @@ document.getElementById('leadIdLabel').textContent  = currentLeadId;
 document.getElementById('submitLeadId').textContent = currentLeadId;
 document.getElementById('dateForwarded').valueAsDate = new Date();
 
+// ── Auto-fill Sales Person from logged-in user ──
+const _cu = crmCurrentUser();
+if (_cu) {
+  const spInput = document.getElementById('salesPersonInput');
+  if (spInput) {
+    spInput.value = _cu.name;
+    if (_cu.role === 'sales') { spInput.readOnly = true; spInput.style.opacity = '0.7'; }
+  }
+}
+
 function switchTab(name, btn) {
   document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -871,27 +1015,26 @@ async function submitLead() {
   const form = document.getElementById('leadForm');
   const data = Object.fromEntries(new FormData(form).entries());
   if (!data.customerName.trim()) { showLeadError('Customer name is required.'); return; }
-  data.leadId   = currentLeadId;
-  data.action   = 'submitLead';
-  data.sheetTab = 'Sales Leads';
-  data.installStatus = 'Pending';
+  data.leadId        = currentLeadId;
+  data.action        = 'submitLead';
+  data.sheetTab      = 'Sales Leads';
+  data.installStatus = 'Not Assigned';
   const btn = document.getElementById('btnSubmit');
-  btn.textContent = 'Forwarding…'; btn.disabled = true;
+  btn.textContent = 'Forwarding...'; btn.disabled = true;
   document.getElementById('errorBanner').style.display = 'none';
   try {
     const result = await crmPost(data);
     if (result.status === 'error') throw new Error(result.message);
-    // Clear all fields right away so they're blank when the user returns
     clearForm();
     document.getElementById('formWrap').style.display = 'none';
     document.getElementById('successScreen').classList.add('active');
   } catch (err) {
-    btn.textContent = 'Forward Lead →'; btn.disabled = false;
+    btn.textContent = 'Forward Lead ->'; btn.disabled = false;
     showLeadError('Submission failed: ' + (err.message || 'check your network'));
   }
 }
 
-function showLeadError(msg) { const b=document.getElementById('errorBanner'); b.textContent='⚠ '+msg; b.style.display='block'; }
+function showLeadError(msg) { const b=document.getElementById('errorBanner'); b.textContent='? '+msg; b.style.display='block'; }
 
 function clearForm() {
   document.getElementById('leadForm').reset();
@@ -899,6 +1042,9 @@ function clearForm() {
   document.getElementById('statusHidden').value = '';
   document.getElementById('sourceHidden').value = '';
   document.getElementById('dateForwarded').valueAsDate = new Date();
+  const cu = crmCurrentUser();
+  const sp = document.getElementById('salesPersonInput');
+  if (cu && sp) sp.value = cu.name;
 }
 
 function resetForm() {
@@ -908,182 +1054,307 @@ function resetForm() {
   document.getElementById('submitLeadId').textContent = currentLeadId;
   document.getElementById('formWrap').style.display   = 'block';
   document.getElementById('successScreen').classList.remove('active');
-  document.getElementById('btnSubmit').textContent    = 'Forward Lead →';
+  document.getElementById('btnSubmit').textContent    = 'Forward Lead ->';
   document.getElementById('btnSubmit').disabled       = false;
 }
 
-let allLeads = [];
+// DATA & STATE
+let allLeads      = [];
+let filteredLeads = [];
+let currentPage   = 1;
+let perPage       = 25;
+let sortKey       = 'dateForwarded';
+let sortDir       = 'desc';
 
 async function loadLeads() {
   const tbody = document.getElementById('leadsBody');
-  tbody.innerHTML = '<tr class="loading-row"><td colspan="12">Loading from Google Sheets…</td></tr>';
+  tbody.innerHTML = '<tr class="loading-row"><td colspan="12">Loading from Google Sheets...</td></tr>';
   resetStats();
   try {
     const json = await crmGet({ action: 'getLeads' });
-    allLeads = json.data || [];
-    renderTable(allLeads); updateStats(allLeads);
+    allLeads   = json.data || [];
+    filterTable();
+    updateStats(allLeads);
   } catch (err) {
-    tbody.innerHTML = `<tr class="loading-row"><td colspan="11" style="color:var(--danger)">⚠ Could not load — ${err.message||'check Script URL'}</td></tr>`;
+    tbody.innerHTML = '<tr class="loading-row"><td colspan="12" style="color:var(--danger)">? Could not load — ' + (err.message||'check Script URL') + '</td></tr>';
   }
 }
 
-function renderTable(leads) {
-  const tbody = document.getElementById('leadsBody');
-  if (!leads.length) { tbody.innerHTML='<tr><td colspan="12"><div class="empty-state"><div class="icon">📭</div><p>No leads found</p></div></td></tr>'; return; }
-  tbody.innerHTML = leads.map((r,i) => {
-    const iCls = r.installStatus==='Installed'?'badge-installed':r.installStatus==='Cancelled'?'badge-cancelled':'badge-pending';
-    const iLbl = r.installStatus||'Pending';
-    const pCls = r.paymentStatus==='Paid'?'badge-closed':r.paymentStatus==='Partial'?'badge-warn':r.paymentStatus==='Refunded'?'badge-lost':'badge-lost';
-    const pLbl = r.paymentStatus||'Unpaid';
-    const amtReceived = r.amountReceived ? 'PKR '+Number(r.amountReceived).toLocaleString() : '';
-    const payCell = `<div style="display:flex;flex-direction:column;gap:4px">
-      <span class="badge ${pCls}" style="align-self:flex-start">${pLbl}</span>
-      ${amtReceived ? `<span style="font-size:11px;color:var(--text);font-family:var(--mono);font-weight:500">${amtReceived}</span>` : ''}
-    </div>`;
-    return `<tr>
-      <td class="td-muted">${r.dateForwarded||'—'}</td>
-      <td><strong>${r.customerName||'—'}</strong></td>
-      <td class="td-muted">${r.contact||'—'}</td>
-      <td class="td-muted">${r.city||'—'}</td>
-      <td>${r.package||'—'}</td>
-      <td>${statusBadge(r.status)}</td>
-      <td><span class="badge ${iCls}">${iLbl}</span></td>
-      <td>${payCell}</td>
-      <td class="td-muted">${r.source||'—'}</td>
-      <td>${r.salesPerson||'—'}</td>
-      <td class="td-muted">${r.followUpDate||'—'}</td>
-      <td><button class="btn btn-ghost btn-sm" onclick="openLeadEdit(${i})" style="font-size:10px;padding:5px 10px">Edit</button></td>
-    </tr>`;
-  }).join('');
-}
-
-function statusBadge(s) {
-  const map = {
-    'Pending':   'pending',
-    'Follow Up': 'followup',
-    'Confirmed': 'confirmed',
-    'Installed': 'installed',
-    'Cancelled': 'cancelled',
-  };
-  return `<span class="badge badge-${map[s]||'pending'}">${s||'Pending'}</span>`;
+function sortTable(key) {
+  if (sortKey === key) { sortDir = sortDir === 'asc' ? 'desc' : 'asc'; }
+  else { sortKey = key; sortDir = 'asc'; }
+  document.querySelectorAll('[id^="sort-"]').forEach(el => el.textContent = '');
+  const el = document.getElementById('sort-' + key);
+  if (el) el.textContent = sortDir === 'asc' ? ' ↑' : ' ↓';
+  renderPage();
 }
 
 function filterTable() {
-  const q  = document.getElementById('searchBox').value.toLowerCase();
-  const st = document.getElementById('filterStatus').value;
-  const it = document.getElementById('filterInstall').value;
-  renderTable(allLeads.filter(r => {
-    const mq  = !q  || [r.customerName,r.contact,r.salesPerson,r.city].some(v=>(v||'').toLowerCase().includes(q));
-    const mst = !st || r.status === st;
-    const mit = !it || (r.installStatus||'Pending') === it;
-    return mq && mst && mit;
-  }));
+  const q        = (document.getElementById('searchBox')?.value    || '').toLowerCase().trim();
+  const st       = document.getElementById('filterStatus')?.value  || '';
+  const it       = document.getElementById('filterInstall')?.value || '';
+  const pay      = document.getElementById('filterPayment')?.value || '';
+  const city     = (document.getElementById('filterCity')?.value   || '').toLowerCase().trim();
+  const sales    = (document.getElementById('filterSales')?.value  || '').toLowerCase().trim();
+  const source   = document.getElementById('filterSource')?.value  || '';
+  const dateFrom = document.getElementById('filterDateFrom')?.value || '';
+  const dateTo   = document.getElementById('filterDateTo')?.value   || '';
+
+  filteredLeads = allLeads.filter(r => {
+    const mq   = !q    || [r.customerName,r.contact,r.city,r.salesPerson,r.package,r.email,r.notes].some(v=>(v||'').toLowerCase().includes(q));
+    const mst  = !st   || r.status === st;
+    const mit  = !it   || (r.installStatus||'Not Assigned') === it;
+    const mpay = !pay  || (r.paymentStatus||'Unpaid') === pay;
+    const mct  = !city || (r.city||'').toLowerCase().includes(city);
+    const msp  = !sales|| (r.salesPerson||'').toLowerCase().includes(sales);
+    const msrc = !source || r.source === source;
+    let mdf=true, mdt=true;
+    if (dateFrom || dateTo) {
+      const d = r.dateForwarded ? new Date(r.dateForwarded) : null;
+      if (d) {
+        if (dateFrom) mdf = d >= new Date(dateFrom);
+        if (dateTo)   mdt = d <= new Date(dateTo + 'T23:59:59');
+      } else { mdf = mdt = false; }
+    }
+    return mq && mst && mit && mpay && mct && msp && msrc && mdf && mdt;
+  });
+
+  filteredLeads.sort((a,b) => {
+    let av = a[sortKey]||'', bv = b[sortKey]||'';
+    if (sortKey.toLowerCase().includes('date')) {
+      av = av ? new Date(av).getTime() : 0;
+      bv = bv ? new Date(bv).getTime() : 0;
+      return sortDir==='asc' ? av-bv : bv-av;
+    }
+    av=av.toString().toLowerCase(); bv=bv.toString().toLowerCase();
+    return sortDir==='asc' ? av.localeCompare(bv) : bv.localeCompare(av);
+  });
+
+  const activeCount = [st,it,pay,city,sales,source,dateFrom,dateTo,q].filter(Boolean).length;
+  const fc = document.getElementById('filterCount');
+  if (fc) fc.textContent = activeCount > 0 ? activeCount + ' filter' + (activeCount>1?'s':'')+' active' : '';
+  currentPage = 1;
+  renderPage();
+  updateStats(allLeads);
+}
+
+function clearAllFilters() {
+  ['searchBox','filterStatus','filterInstall','filterPayment','filterCity','filterSales','filterSource','filterDateFrom','filterDateTo'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.value = '';
+  });
+  filterTable();
+}
+
+function renderPage() {
+  const tbody = document.getElementById('leadsBody');
+  const total = filteredLeads.length;
+  const pages = Math.max(1, Math.ceil(total / perPage));
+  currentPage = Math.min(currentPage, pages);
+  const start = (currentPage-1) * perPage;
+  const slice = filteredLeads.slice(start, start+perPage);
+
+  const ri = document.getElementById('resultsInfo');
+  if (ri) ri.textContent = total===0 ? 'No results' : 'Showing '+(start+1)+'–'+Math.min(start+perPage,total)+' of '+total+' lead'+(total!==1?'s':'');
+
+  if (!slice.length) {
+    tbody.innerHTML = '<tr><td colspan="12"><div class="empty-state"><div class="icon">?</div><p>No leads match your filters</p></div></td></tr>';
+    renderPagination(0, 1); return;
+  }
+
+  tbody.innerHTML = slice.map(r => {
+    const globalIdx = allLeads.indexOf(r);
+
+    // Payment only shown for Won leads
+    const payCell = r.status==='Won'
+      ? (()=>{
+          const pCls=r.paymentStatus==='Paid'?'badge-won':r.paymentStatus==='Partial'?'badge-interested':'badge-lost';
+          const pLbl=r.paymentStatus||'Unpaid';
+          const amtRx=r.amountReceived?'PKR '+Number(r.amountReceived).toLocaleString():'';
+          return '<div style="display:flex;flex-direction:column;gap:4px"><span class="badge '+pCls+'" style="align-self:flex-start">'+pLbl+'</span>'+(amtRx?'<span style="font-size:11px;color:var(--text);font-family:var(--mono);font-weight:500">'+amtRx+'</span>':'')+'</div>';
+        })()
+      : r.status==='Lost' && r.lostReason
+        ? '<span style="font-size:10px;color:var(--muted)">'+r.lostReason+'</span>'
+        : '<span style="color:var(--muted2);font-size:10px">—</span>';
+    return '<tr>'
+      +'<td class="td-muted">'+(r.dateForwarded||'—')+'</td>'
+      +'<td><strong>'+(r.customerName||'—')+'</strong></td>'
+      +'<td class="td-muted">'+(r.contact||'—')+'</td>'
+      +'<td class="td-muted">'+(r.city||'—')+'</td>'
+      +'<td>'+(r.package||'—')+'</td>'
+      +'<td>'+statusBadge(r.status)+'</td>'
+      +'<td>'+installBadge(r.installStatus)+'</td>'
+      +'<td>'+payCell+'</td>'
+      +'<td class="td-muted">'+(r.source||'—')+'</td>'
+      +'<td>'+(r.salesPerson||'—')+'</td>'
+      +'<td class="td-muted">'+(r.followUpDate||'—')+'</td>'
+      +'<td><button class="btn btn-ghost btn-sm" onclick="openLeadEdit('+globalIdx+')" style="font-size:10px;padding:5px 10px">Edit</button></td>'
+      +'</tr>';
+  }).join('');
+
+  renderPagination(total, pages);
+}
+
+function renderPagination(total, pages) {
+  const bar = document.getElementById('paginationBtns');
+  if (!bar) return;
+  if (total === 0) { bar.innerHTML = ''; return; }
+  const btn = (label, page, disabled, active) =>
+    '<button onclick="goToPage('+page+')" style="padding:6px 11px;border-radius:6px;'
+    +'background:'+(active?'rgba(56,217,245,0.12)':'var(--surface2)')
+    +';border:1px solid '+(active?'rgba(56,217,245,0.35)':'var(--border)')
+    +';color:'+(active?'var(--accent)':disabled?'var(--muted2)':'var(--muted)')
+    +';font-family:var(--mono);font-size:11px;cursor:'+(disabled?'not-allowed':'pointer')
+    +';transition:all 0.15s;pointer-events:'+(disabled?'none':'auto')+'"'
+    +(disabled?' disabled':'')+'>'+label+'</button>';
+  let html = btn('‹ Prev', currentPage-1, currentPage===1, false);
+  const range=2, s=Math.max(1,currentPage-range), e=Math.min(pages,currentPage+range);
+  if (s>1) { html+=btn('1',1,false,false); if(s>2) html+='<span style="color:var(--muted);font-size:11px;padding:0 4px">…</span>'; }
+  for (let p=s; p<=e; p++) html+=btn(p,p,false,p===currentPage);
+  if (e<pages) { if(e<pages-1) html+='<span style="color:var(--muted);font-size:11px;padding:0 4px">…</span>'; html+=btn(pages,pages,false,false); }
+  html += btn('Next ›', currentPage+1, currentPage===pages, false);
+  bar.innerHTML = html;
+  const ji = document.getElementById('pageJumpInput');
+  if (ji) { ji.value = currentPage; ji.max = pages; }
+}
+
+function goToPage(p) { currentPage=p; renderPage(); window.scrollTo({top:0,behavior:'smooth'}); }
+function jumpToPage() {
+  const p=parseInt(document.getElementById('pageJumpInput').value);
+  const pages=Math.ceil(filteredLeads.length/perPage);
+  if (p>=1 && p<=pages) goToPage(p);
+}
+function changePerPage() { perPage=parseInt(document.getElementById('perPageSel').value); currentPage=1; renderPage(); }
+
+function installBadge(s) {
+  const map={
+    'Not Assigned':'notassigned','Assigned':'assigned','Scheduled':'scheduled',
+    'In Progress':'inprogress','Completed':'completed','On Hold':'onhold','Failed':'failed'
+  };
+  return '<span class="badge badge-'+(map[s]||'notassigned')+'">'+(s||'Not Assigned')+'</span>';
+}
+
+function statusBadge(s) {
+  const map={'Pending':'pending','Follow Up':'followup','Confirmed':'confirmed','Installed':'installed','Cancelled':'cancelled'};
+  return '<span class="badge badge-'+(map[s]||'pending')+'">'+(s||'Pending')+'</span>';
 }
 
 function updateStats(leads) {
-  document.getElementById('st-total').textContent     = leads.length;
-  document.getElementById('st-pending').textContent   = leads.filter(r=>r.status==='Pending').length;
-  document.getElementById('st-followup').textContent  = leads.filter(r=>r.status==='Follow Up').length;
-  document.getElementById('st-confirmed').textContent = leads.filter(r=>r.status==='Confirmed').length;
-  document.getElementById('st-installed').textContent = leads.filter(r=>r.status==='Installed').length;
-  document.getElementById('st-cancelled').textContent = leads.filter(r=>r.status==='Cancelled').length;
+  document.getElementById('st-total').textContent       = leads.length;
+  document.getElementById('st-new').textContent         = leads.filter(r=>r.status==='New Lead').length;
+  document.getElementById('st-contacted').textContent   = leads.filter(r=>r.status==='Contacted').length;
+  document.getElementById('st-interested').textContent  = leads.filter(r=>r.status==='Interested').length;
+  document.getElementById('st-negotiation').textContent = leads.filter(r=>r.status==='Negotiation').length;
+  document.getElementById('st-won').textContent         = leads.filter(r=>r.status==='Won').length;
+  document.getElementById('st-lost').textContent        = leads.filter(r=>r.status==='Lost').length;
 }
 function resetStats() {
-  ['total','pending','followup','confirmed','installed','cancelled'].forEach(k => document.getElementById('st-'+k).textContent = '—');
+  ['total','new','contacted','interested','negotiation','won','lost'].forEach(k => {
+    const el=document.getElementById('st-'+k); if(el) el.textContent='--';
+  });
 }
 
-// ── Lead Edit Modal ──
+// Lead Edit Modal
 let editingLeadIdx = -1;
-
 function openLeadEdit(idx) {
   editingLeadIdx = idx;
   const r = allLeads[idx];
   if (!r) return;
-  document.getElementById('lem-title').textContent = 'Edit Lead — ' + (r.customerName||r.leadId||'');
+  document.getElementById('lem-title').textContent = 'Edit Lead -- ' + (r.customerName||r.leadId||'');
   document.getElementById('lem-err').style.display = 'none';
-  document.getElementById('lem-body').innerHTML = `
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 18px">
-      <div class="field"><label>Customer Name</label><input id="lem-name" value="${esc(r.customerName||'')}"></div>
-      <div class="field"><label>Contact</label><input id="lem-contact" value="${esc(r.contact||'')}"></div>
-      <div class="field"><label>City</label><input id="lem-city" value="${esc(r.city||'')}"></div>
-      <div class="field"><label>Package</label><input id="lem-package" value="${esc(r.package||'')}"></div>
-      <div class="field"><label>Sales Person</label><input id="lem-sales" value="${esc(r.salesPerson||'')}"></div>
-      <div class="field"><label>Follow-up Date</label><input type="date" id="lem-followup" value="${r.followUpDate||''}"></div>
-    </div>
-
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 18px">
-      <div class="field"><label>Lead Status</label>
-        <select id="lem-status">
-          ${['Pending','Follow Up','Confirmed','Installed','Cancelled'].map(s=>`<option ${r.status===s?'selected':''}>${s}</option>`).join('')}
-        </select></div>
-      <div class="field"><label>Installation Status</label>
-        <select id="lem-install">
-          ${['Pending','Installed','Cancelled'].map(s=>`<option ${(r.installStatus||'Pending')===s?'selected':''}>${s}</option>`).join('')}
-        </select></div>
-    </div>
-
-    <div style="border-top:1px solid var(--border);margin:14px 0 16px;padding-top:16px">
-      <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--accent2);margin-bottom:12px;font-weight:500">💰 Payment Details</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:0 18px">
-        <div class="field"><label>Payment Status</label>
-          <select id="lem-paystatus">
-            ${['Unpaid','Partial','Paid','Refunded'].map(s=>`<option ${(r.paymentStatus||'Unpaid')===s?'selected':''}>${s}</option>`).join('')}
-          </select></div>
-        <div class="field"><label>Payment Mode</label>
-          <select id="lem-paymode">
-            <option value="">Select…</option>
-            ${['Cash','Bank Transfer','Cheque','Online','Credit'].map(s=>`<option ${(r.paymentMode||'')===s?'selected':''}>${s}</option>`).join('')}
-          </select></div>
-        <div class="field"><label>Amount Received (PKR)</label>
-          <input type="number" id="lem-amount" value="${esc(r.amountReceived||'')}" placeholder="0" min="0"></div>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 18px">
-        <div class="field"><label>Total Amount (PKR)</label>
-          <input type="number" id="lem-total" value="${esc(r.totalAmount||'')}" placeholder="0" min="0"></div>
-        <div class="field"><label>Payment Date</label>
-          <input type="date" id="lem-paydate" value="${r.paymentDate||''}"></div>
-      </div>
-    </div>
-
-    <div class="field"><label>Notes</label><textarea id="lem-notes" style="height:56px">${esc(r.notes||'')}</textarea></div>`;
+  document.getElementById('lem-body').innerHTML =
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:0 18px">'
+    +'<div class="field"><label>Customer Name</label><input id="lem-name" value="'+esc(r.customerName||'')+'"></div>'
+    +'<div class="field"><label>Contact</label><input id="lem-contact" value="'+esc(r.contact||'')+'"></div>'
+    +'<div class="field"><label>City</label><input id="lem-city" value="'+esc(r.city||'')+'"></div>'
+    +'<div class="field"><label>Package</label><input id="lem-package" value="'+esc(r.package||'')+'"></div>'
+    +'<div class="field"><label>Sales Person</label><input id="lem-sales" value="'+esc(r.salesPerson||'')+'"></div>'
+    +'<div class="field"><label>Follow-up Date</label><input type="date" id="lem-followup" value="'+(r.followUpDate||'')+'"></div>'
+    +'</div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:0 18px">'
+    +'<div class="field"><label>Lead Status</label><select id="lem-status">'
+    +['New Lead','Contacted','Interested','Negotiation','Won','Lost'].map(s=>'<option '+(r.status===s?'selected':'')+'>'+s+'</option>').join('')
+    +'</select></div>'
+    +'<div class="field"><label>Installation Status <span style="font-size:9px;color:var(--muted);">(active when Won)</span></label><select id="lem-install" '+(r.status!=='Won'?'disabled style="opacity:0.4"':'')+'>'
+    +['Not Assigned','Assigned','Scheduled','In Progress','Completed','On Hold','Failed'].map(s=>'<option '+((r.installStatus||'Not Assigned')===s?'selected':'')+'>'+s+'</option>').join('')
+    +'</select></div></div>'
+    // Dynamic: enable install status only when lead status = Won
+    +'<script>document.getElementById("lem-status").addEventListener("change",function(){var ins=document.getElementById("lem-install");ins.disabled=this.value!=="Won";ins.style.opacity=this.value==="Won"?"1":"0.4";});<\/script>'
+    // Payment — only shown when Won
+    +(r.status==='Won' ? (
+      '<div style="border-top:1px solid var(--border);margin:14px 0 16px;padding-top:16px">'
+      +'<div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--success);margin-bottom:12px;font-weight:500">\ud83d\udcb0 Payment Details (Won Deal)</div>'
+      +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:0 18px">'
+      +'<div class="field"><label>Payment Status</label><select id="lem-paystatus">'
+      +['Unpaid','Partial','Paid','Refunded'].map(s=>'<option '+((r.paymentStatus||'Unpaid')===s?'selected':'')+'>'+s+'</option>').join('')
+      +'</select></div>'
+      +'<div class="field"><label>Payment Mode</label><select id="lem-paymode"><option value="">Select...</option>'
+      +['Cash','Bank Transfer','Cheque','Online','Credit'].map(s=>'<option '+((r.paymentMode||'')===s?'selected':'')+'>'+s+'</option>').join('')
+      +'</select></div>'
+      +'<div class="field"><label>Amount Received (PKR)</label><input type="number" id="lem-amount" value="'+esc(r.amountReceived||'')+'" placeholder="0" min="0"></div>'
+      +'</div>'
+      +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:0 18px">'
+      +'<div class="field"><label>Total Amount (PKR)</label><input type="number" id="lem-total" value="'+esc(r.totalAmount||'')+'" placeholder="0" min="0"></div>'
+      +'<div class="field"><label>Payment Date</label><input type="date" id="lem-paydate" value="'+(r.paymentDate||'')+'"</div>'
+      +'</div></div>'
+    ) : '')
+    // Lost Reason — only shown when Lost
+    +(r.status==='Lost' ? (
+      '<div style="border-top:1px solid var(--border);margin:14px 0 16px;padding-top:16px">'
+      +'<div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:12px;font-weight:500">\u274c Lost Reason</div>'
+      +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:0 18px">'
+      +'<div class="field"><label>Reason Lost</label><select id="lem-lostreason">'
+      +'<option value="">Select reason...</option>'
+      +['Too Expensive','Chose Competitor','No Budget','Not Interested','No Response','Requirement Changed','Other'].map(s=>'<option '+((r.lostReason||'')===s?'selected':'')+'>'+s+'</option>').join('')
+      +'</select></div>'
+      +'<div class="field"><label>Lost Date</label><input type="date" id="lem-lostdate" value="'+(r.lostDate||'')+'"></div>'
+      +'</div></div>'
+    ) : '')
+    +'<div class="field"><label>Notes</label><textarea id="lem-notes" style="height:56px">'+esc(r.notes||'')+'</textarea></div>';
   document.getElementById('leadEditModal').style.display = 'flex';
 }
 
 function closeLEM() { document.getElementById('leadEditModal').style.display = 'none'; }
-
-document.getElementById('leadEditModal').addEventListener('click', e => {
-  if (e.target === document.getElementById('leadEditModal')) closeLEM();
-});
+document.getElementById('leadEditModal').addEventListener('click', e => { if(e.target===document.getElementById('leadEditModal')) closeLEM(); });
 
 async function saveLead() {
   const r = allLeads[editingLeadIdx];
   if (!r) return;
   const errEl = document.getElementById('lem-err');
   errEl.style.display = 'none';
+  const newStatus = document.getElementById('lem-status').value;
   const updates = {
-    customerName:   document.getElementById('lem-name').value.trim(),
-    contact:        document.getElementById('lem-contact').value.trim(),
-    city:           document.getElementById('lem-city').value.trim(),
-    package:        document.getElementById('lem-package').value.trim(),
-    salesPerson:    document.getElementById('lem-sales').value.trim(),
-    followUpDate:   document.getElementById('lem-followup').value,
-    status:         document.getElementById('lem-status').value,
-    installStatus:  document.getElementById('lem-install').value,
-    paymentStatus:  document.getElementById('lem-paystatus').value,
-    paymentMode:    document.getElementById('lem-paymode').value,
-    amountReceived: document.getElementById('lem-amount').value.trim(),
-    totalAmount:    document.getElementById('lem-total').value.trim(),
-    paymentDate:    document.getElementById('lem-paydate').value,
-    notes:          document.getElementById('lem-notes').value.trim(),
+    customerName:  document.getElementById('lem-name').value.trim(),
+    contact:       document.getElementById('lem-contact').value.trim(),
+    city:          document.getElementById('lem-city').value.trim(),
+    package:       document.getElementById('lem-package').value.trim(),
+    salesPerson:   document.getElementById('lem-sales').value.trim(),
+    followUpDate:  document.getElementById('lem-followup').value,
+    status:        newStatus,
+    installStatus: document.getElementById('lem-install').value,
+    notes:         document.getElementById('lem-notes').value.trim(),
   };
+  // Payment — only collect when Won
+  if (newStatus === 'Won') {
+    updates.paymentStatus  = document.getElementById('lem-paystatus')?.value || '';
+    updates.paymentMode    = document.getElementById('lem-paymode')?.value   || '';
+    updates.amountReceived = document.getElementById('lem-amount')?.value.trim() || '';
+    updates.totalAmount    = document.getElementById('lem-total')?.value.trim()  || '';
+    updates.paymentDate    = document.getElementById('lem-paydate')?.value  || '';
+  }
+  // Lost reason — only collect when Lost
+  if (newStatus === 'Lost') {
+    updates.lostReason = document.getElementById('lem-lostreason')?.value || '';
+    updates.lostDate   = document.getElementById('lem-lostdate')?.value   || '';
+  }
   try {
     const res = await crmPost({ action:'updateField', sheetTab:'Sales Leads', keyField:'leadId', keyValue:r.leadId, updates });
     if (res.status === 'error') throw new Error(res.message);
+    Object.assign(allLeads[editingLeadIdx], updates);
     closeLEM();
-    showLeadsToast('✓ Lead updated successfully');
-    loadLeads();
+    showLeadsToast('Lead updated successfully');
+    filterTable();
   } catch (err) {
-    errEl.textContent = '⚠ Save failed: ' + (err.message||'check connection');
+    errEl.textContent = 'Save failed: ' + (err.message||'check connection');
     errEl.style.display = 'block';
   }
 }
@@ -1095,6 +1366,9 @@ function showLeadsToast(msg){
   t.style.cssText='position:fixed;bottom:24px;right:24px;background:rgba(61,255,160,0.12);border:1px solid rgba(61,255,160,0.35);border-radius:10px;padding:14px 20px;color:var(--success);font-size:12px;font-family:var(--mono);z-index:999;max-width:360px';
   t.textContent=msg; document.body.appendChild(t); setTimeout(()=>t.remove(),3000);
 }
+
+const _si = document.getElementById('sort-dateForwarded');
+if (_si) _si.textContent = ' ↓';
 
 if (typeof crmNav === 'function') crmNav('leads');
 </script>
