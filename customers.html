@@ -225,8 +225,12 @@ body::after{display:none}
   <div class="drawer">
     <div class="dr-head">
       <h3 id="dr-name">Customer</h3>
-      <button class="close-btn" onclick="closeDrawer()">✕</button>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button class="btn btn-primary btn-sm" id="btn-edit-cust" onclick="toggleDrawerEdit()">Edit</button>
+        <button class="close-btn" onclick="closeDrawer()">✕</button>
+      </div>
     </div>
+    <div id="dr-edit-form" style="display:none"></div>
     <div id="dr-body"></div>
   </div>
 </div>
@@ -234,6 +238,111 @@ body::after{display:none}
 <script>
 crmNav('customers');
 startClock(document.getElementById('clock'));
+
+// ── Drawer Edit Mode ──
+let _editId = null;
+
+function toggleDrawerEdit(){
+  const editForm = document.getElementById('dr-edit-form');
+  const viewBody = document.getElementById('dr-body');
+  const btn      = document.getElementById('btn-edit-cust');
+  const isEdit   = editForm.style.display !== 'none';
+
+  if(isEdit){
+    editForm.style.display = 'none';
+    viewBody.style.display = 'block';
+    btn.textContent = 'Edit';
+    return;
+  }
+
+  const c = custDB[_editId]; if(!c) return;
+  const fi = (id, lbl, val, type='text') =>
+    `<div class="field"><label>${lbl}</label><input type="${type}" id="ef-${id}" value="${(val||'').replace(/"/g,'&quot;')}" style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--mono);font-size:11px;padding:8px 12px;outline:none;transition:border-color 0.2s"></div>`;
+  const ft = (id, lbl, val) =>
+    `<div class="field"><label>${lbl}</label><textarea id="ef-${id}" style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--mono);font-size:11px;padding:8px 12px;outline:none;height:64px;resize:none">${val||''}</textarea></div>`;
+
+  editForm.innerHTML = `
+    <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--accent2);margin-bottom:14px;font-weight:500">Edit Customer</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 14px">
+      ${fi('name','Customer Name *', c.name)}
+      ${fi('contact','Contact *', c.contact)}
+      ${fi('company','Company', c.company)}
+      ${fi('rac','RAC / Group', c.rac)}
+      ${fi('email','Email', c.email, 'email')}
+      ${fi('city','City', c.city)}
+      ${fi('area','Area', c.area)}
+      ${fi('cnic','CNIC', c.cnic)}
+      ${fi('father',"Father's Name", c.father)}
+      ${fi('designation','Designation', c.designation)}
+    </div>
+    ${ft('address','Postal Address', c.address)}
+    ${ft('notes','Notes', c.notes)}
+    <div class="error-banner" id="ef-err"></div>
+    <div style="display:flex;gap:8px;margin-top:14px">
+      <button class="btn btn-solid" onclick="saveDrawerEdit()">Save Changes</button>
+      <button class="btn btn-ghost" onclick="toggleDrawerEdit()">Cancel</button>
+    </div>`;
+
+  editForm.style.display = 'block';
+  viewBody.style.display = 'none';
+  btn.textContent = 'Cancel';
+}
+
+async function saveDrawerEdit(){
+  const c = custDB[_editId]; if(!c) return;
+  const errEl = document.getElementById('ef-err');
+  const name    = document.getElementById('ef-name').value.trim();
+  const contact = document.getElementById('ef-contact').value.trim();
+  errEl.style.display='none';
+  if(!name)   { errEl.textContent='⚠ Name required';    errEl.style.display='block'; return; }
+  if(!contact){ errEl.textContent='⚠ Contact required'; errEl.style.display='block'; return; }
+
+  const updates = {
+    action:'submitCustomer', sheetTab:'Customers',
+    customerId:   c.customerId,
+    createdAt:    c.createdAt || new Date().toISOString().split('T')[0],
+    customerName: name,
+    contact,
+    company:      document.getElementById('ef-company').value.trim(),
+    rac:          document.getElementById('ef-rac').value.trim(),
+    email:        document.getElementById('ef-email').value.trim(),
+    city:         document.getElementById('ef-city').value.trim(),
+    area:         document.getElementById('ef-area').value.trim(),
+    cnic:         document.getElementById('ef-cnic').value.trim(),
+    father:       document.getElementById('ef-father').value.trim(),
+    designation:  document.getElementById('ef-designation').value.trim(),
+    address:      document.getElementById('ef-address').value.trim(),
+    notes:        document.getElementById('ef-notes').value.trim(),
+    totalJobs:    c.jobs.length,
+    lastJobDate:  c.lastDate||'',
+  };
+
+  try{
+    const res = await crmPost(updates);
+    if(res.status==='error') throw new Error(res.message);
+    // Update local custDB
+    c.name        = name;
+    c.contact     = contact;
+    c.company     = updates.company;
+    c.rac         = updates.rac;
+    c.email       = updates.email;
+    c.city        = updates.city;
+    c.area        = updates.area;
+    c.cnic        = updates.cnic;
+    c.father      = updates.father;
+    c.designation = updates.designation;
+    c.address     = updates.address;
+    c.notes       = updates.notes;
+    // Refresh drawer view and cards
+    toggleDrawerEdit();
+    openDrawer(encodeURIComponent(_editId));
+    filterCustomers();
+    showToast('✓ Customer updated');
+  }catch(err){
+    errEl.textContent='⚠ '+(err.message||'Save failed');
+    errEl.style.display='block';
+  }
+}
 
 let allJOs=[], custDB={}, filteredCusts=[], csPage=1, csPerPage=24;
 
@@ -271,7 +380,7 @@ function buildCustDB(manualCusts){
     const key=c.customerId||('auto_'+c.name+'_'+c.contact);
     custDB[key]={
       customerId:c.customerId||key,
-      name:c.name||'',contact:c.contact||'',email:c.email||'',
+      name:c.customerName||c.name||'',contact:c.contact||'',email:c.email||'',
       cnic:c.cnic||'',father:c.father||'',
       company:c.company||'',rac:c.rac||'',designation:c.designation||'',
       industry:c.industry||'',city:c.city||'',area:c.area||'',
@@ -358,7 +467,7 @@ function renderCustomers(){
     const initials=c.name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase()||'??';
     const safeId=encodeURIComponent(c.customerId);
     return `<div class="c-card" onclick="openDrawer('${safeId}')">
-      <div class="cc-id">${c.customerId.startsWith('CUS-')?c.customerId:c.customerId.slice(0,12)+'…'}</div>
+      <div class="cc-id">${c.customerId.startsWith('CUST-')||c.customerId.startsWith('CUS-')?c.customerId:c.customerId.slice(0,14)+'…'}</div>
       <div class="cc-head">
         <div class="cc-av">${initials}</div>
         <div>
@@ -388,6 +497,11 @@ function csNext(){const p=Math.ceil(filteredCusts.length/csPerPage);if(csPage<p)
 function openDrawer(safeId){
   const id=decodeURIComponent(safeId);
   const c=custDB[id];if(!c)return;
+  _editId=id;
+  // Reset edit state
+  document.getElementById('dr-edit-form').style.display='none';
+  document.getElementById('dr-body').style.display='block';
+  document.getElementById('btn-edit-cust').textContent='Edit';
   document.getElementById('dr-name').textContent=c.name;
   const f=(l,v)=>v?`<div class="ig-item"><div class="ig-l">${l}</div><div class="ig-v">${v}</div></div>`:'';
   document.getElementById('dr-body').innerHTML=`
@@ -445,7 +559,7 @@ function openDrawer(safeId){
     ${c.notes?`<div class="sec-lbl">Notes</div><div style="background:var(--surface2);border-radius:8px;padding:10px 12px;font-size:12px;color:var(--muted)">${c.notes}</div>`:''}
 
     <div style="margin-top:16px;display:flex;gap:8px;flex-wrap:wrap">
-      <a href="vehicle_job_order.html" class="btn btn-primary btn-sm">＋ New Job Order</a>
+      <a href="job_orders.html" class="btn btn-primary btn-sm">＋ New Job Order</a>
       <a href="sales_leads.html" class="btn btn-ghost btn-sm">🎯 New Lead</a>
     </div>`;
   document.getElementById('custDrawer').classList.add('open');
@@ -456,7 +570,7 @@ document.getElementById('custDrawer').addEventListener('click',e=>{if(e.target==
 
 // ── Add new customer ──
 function genNewCustId(){
-  const id='CUS-'+Date.now().toString(36).toUpperCase().slice(-8);
+  const id='CUST-'+Date.now().toString(36).toUpperCase().slice(-8);
   document.getElementById('new-cust-id').textContent=id;
   return id;
 }
@@ -488,7 +602,8 @@ async function saveNewCustomer(){
     action:'submitCustomer',
     sheetTab:'Customers',
     customerId,
-    name,contact,
+    createdAt: new Date().toISOString().split('T')[0],
+    customerName:name, contact,
     email:document.getElementById('nc-email').value.trim(),
     cnic:document.getElementById('nc-cnic').value.trim(),
     father:document.getElementById('nc-father').value.trim(),

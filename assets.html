@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Assets — FleetCRM</title>
+<script src="crm-core.js"></script>
+<script>document.head.insertAdjacentHTML('beforeend', CRM_STYLE);</script>
+<style>
+body{display:block!important;padding:0!important}body::after{display:none}
+
+/* Tab bar */
+.tab-bar{display:flex;gap:6px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:5px;margin-bottom:24px}
+.tab-btn{flex:1;padding:10px 16px;border:none;border-radius:8px;background:transparent;color:var(--muted);font-family:var(--mono);font-size:11px;letter-spacing:1px;text-transform:uppercase;cursor:pointer;transition:all 0.2s;text-align:center}
+.tab-btn.active{background:rgba(56,217,245,0.1);color:var(--accent);border:1px solid rgba(56,217,245,0.2)}
+.tab-btn:hover:not(.active){color:var(--text)}
+.tab-panel{display:none}.tab-panel.active{display:block}
+
+/* Stats */
+.asset-stats{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:22px}
+
+/* Asset cards grid */
+.asset-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px}
+.asset-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:0;cursor:pointer;transition:all 0.18s;overflow:hidden;position:relative}
+.asset-card:hover{border-color:rgba(56,217,245,0.3);transform:translateY(-1px);box-shadow:0 4px 24px rgba(0,0,0,0.35)}
+.ac-header{padding:16px 18px 12px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;gap:12px}
+.ac-icon{width:42px;height:42px;border-radius:10px;background:linear-gradient(135deg,rgba(56,217,245,0.15),rgba(123,111,255,0.15));border:1px solid rgba(56,217,245,0.2);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.ac-reg{font-family:var(--display);font-size:15px;font-weight:800;color:var(--accent);letter-spacing:0.5px}
+.ac-vehicle{font-size:11px;color:var(--text);margin-top:2px}
+.ac-customer{font-size:10px;color:var(--muted);margin-top:3px}
+.ac-body{padding:12px 18px}
+.ac-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:7px}
+.ac-row:last-child{margin-bottom:0}
+.ac-lbl{font-size:9px;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted)}
+.ac-val{font-size:11px;color:var(--text);font-family:var(--mono)}
+.ac-footer{padding:10px 18px;background:var(--surface2);border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.ac-status{font-size:9px;letter-spacing:1px;text-transform:uppercase;padding:3px 10px;border-radius:4px}
+.st-active{background:rgba(61,255,160,0.1);color:var(--success);border:1px solid rgba(61,255,160,0.2)}
+.st-inactive{background:rgba(90,96,112,0.15);color:var(--muted);border:1px solid var(--border)}
+.st-expiring{background:rgba(255,179,71,0.1);color:var(--warn);border:1px solid rgba(255,179,71,0.2)}
+.st-expired{background:rgba(255,95,109,0.1);color:var(--danger);border:1px solid rgba(255,95,109,0.2)}
+.ac-imei{font-size:9px;color:var(--muted2);font-family:var(--mono)}
+
+/* Filter bar */
+.filter-wrap{background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:14px 18px;margin-bottom:16px}
+.f-row{display:grid;gap:10px;margin-bottom:10px}.f-row:last-child{margin-bottom:0}
+.f3{grid-template-columns:2fr 1fr 1fr}.f4{grid-template-columns:1fr 1fr 1fr 1fr}
+.fi{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--mono);font-size:11px;padding:8px 10px;outline:none;transition:border-color 0.2s}
+.fi:focus{border-color:rgba(56,217,245,0.4)}.fi::placeholder{color:var(--muted)}
+.fi-s{appearance:none;cursor:pointer;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath fill='%235a6070' d='M5 6L0 0h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:26px}
+.fi-s option{background:#1a1e26}
+
+/* Pagination */
+.pg-bar{display:flex;align-items:center;justify-content:space-between;margin-top:18px;flex-wrap:wrap;gap:10px}
+.pg-btns{display:flex;gap:5px;flex-wrap:wrap}
+.pgb{padding:5px 10px;border-radius:6px;background:var(--surface2);border:1px solid var(--border);color:var(--muted);font-family:var(--mono);font-size:11px;cursor:pointer;transition:all 0.15s}
+.pgb.act{background:rgba(56,217,245,0.1);border-color:rgba(56,217,245,0.3);color:var(--accent)}
+.pgb:hover:not(:disabled){color:var(--text);border-color:var(--border-hi)}.pgb:disabled{opacity:0.3;cursor:not-allowed}
+.pg-jump{display:flex;align-items:center;gap:6px;font-size:10px;color:var(--muted)}
+.pg-jump input{width:50px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:var(--mono);font-size:11px;padding:5px 8px;outline:none;text-align:center}
+
+/* Add/Edit form */
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 20px}
+.form-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0 20px}
+.span-2{grid-column:span 2}
+.divider-label{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);padding:14px 0 6px;display:flex;align-items:center;gap:10px;margin-bottom:4px}
+.divider-label::after{content:'';flex:1;height:1px;background:var(--border)}
+.cust-wrap{position:relative}
+.cust-dd{position:absolute;top:calc(100% + 4px);left:0;right:0;background:var(--surface);border:1px solid var(--border-hi);border-radius:10px;max-height:220px;overflow-y:auto;z-index:200;box-shadow:0 8px 32px rgba(0,0,0,0.5);display:none}
+.cust-dd.open{display:block}
+.copt{padding:10px 14px;cursor:pointer;border-bottom:1px solid var(--border);transition:background 0.12s}
+.copt:last-child{border-bottom:none}.copt:hover{background:rgba(56,217,245,0.06)}
+.copt-name{font-size:12px;color:var(--text);font-weight:600}
+.copt-meta{font-size:10px;color:var(--muted);margin-top:2px}
+.tracker-dd{position:absolute;top:calc(100% + 4px);left:0;right:0;background:var(--surface);border:1px solid var(--border-hi);border-radius:10px;max-height:200px;overflow-y:auto;z-index:200;box-shadow:0 8px 32px rgba(0,0,0,0.5);display:none}
+.tracker-dd.open{display:block}
+
+/* Detail drawer */
+.drw-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.78);z-index:300;display:none;align-items:flex-start;justify-content:flex-end}
+.drw-overlay.open{display:flex}
+.drw{background:var(--surface);border-left:1px solid var(--border-hi);width:100%;max-width:640px;height:100vh;overflow-y:auto;animation:slideIn 0.25s ease;display:flex;flex-direction:column}
+@keyframes slideIn{from{transform:translateX(100%)}to{transform:translateX(0)}}
+.drw-top{padding:22px 26px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;justify-content:space-between;flex-shrink:0}
+.drw-body{padding:22px 26px;flex:1;overflow-y:auto}
+.drw-reg{font-family:var(--display);font-size:22px;font-weight:800;color:var(--accent)}
+.drw-vehicle{font-size:13px;color:var(--text);margin-top:3px}
+.drw-cust{font-size:11px;color:var(--muted);margin-top:2px}
+.close-btn{background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer;padding:4px 8px;border-radius:6px;transition:color 0.15s;flex-shrink:0}
+.close-btn:hover{color:var(--text)}
+.drw-sec{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin:18px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.ig-item{background:var(--surface2);border-radius:8px;padding:10px 12px}
+.ig-l{font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:3px}
+.ig-v{font-size:12px;color:var(--text);word-break:break-all}
+
+/* Activity timeline */
+.activity-item{padding:12px 14px;border-left:2px solid var(--border);margin-left:8px;margin-bottom:4px;position:relative;transition:border-color 0.15s}
+.activity-item::before{content:'';position:absolute;left:-5px;top:16px;width:8px;height:8px;border-radius:50%;background:var(--border);transition:background 0.15s}
+.activity-item:hover{border-left-color:var(--accent)}
+.activity-item:hover::before{background:var(--accent)}
+.act-new_installation::before{background:var(--accent)}
+.act-new_installation{border-left-color:var(--accent)}
+.act-replacement::before{background:var(--warn)}
+.act-replacement{border-left-color:var(--warn)}
+.act-removal::before{background:var(--danger)}
+.act-removal{border-left-color:var(--danger)}
+.act-type{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1px}
+.act-date{font-size:10px;color:var(--muted);float:right}
+.act-detail{font-size:11px;color:var(--muted);margin-top:4px}
+.act-invoice{font-size:9px;color:var(--accent2);font-family:var(--mono);margin-top:2px}
+
+/* Device pills */
+.device-pill{display:inline-flex;align-items:center;gap:8px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 14px;margin:4px 4px 4px 0}
+.dp-label{font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--muted)}
+.dp-val{font-size:12px;color:var(--text);font-family:var(--mono)}
+
+@media(max-width:900px){.asset-stats{grid-template-columns:repeat(3,1fr)}.f3,.f4{grid-template-columns:1fr 1fr}.asset-grid{grid-template-columns:1fr}}
+@media(max-width:600px){.asset-stats{grid-template-columns:1fr 1fr}.f3,.f4{grid-template-columns:1fr}.form-grid,.form-grid-3{grid-template-columns:1fr}.span-2{grid-column:span 1}.info-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<script>const _gu = crmGuard('assets');</script>
+
+<div class="crm-main">
+  <div class="crm-topbar">
+    <div>
+      <div class="page-title">Assets</div>
+      <div class="page-subtitle">Vehicle registry — linked trackers, SIMs &amp; full activity history</div>
+    </div>
+    <div class="topbar-right">
+      <div class="topbar-time" id="clock"></div>
+    </div>
+  </div>
+
+  <div class="crm-content fade-up">
+
+    <!-- Tabs -->
+    <div class="tab-bar">
+      <button class="tab-btn active" id="tab-all"  onclick="switchTab('all',this)">🚗 All Assets</button>
+      <button class="tab-btn"         id="tab-add"  onclick="switchTab('add',this)">＋ Add Asset</button>
+    </div>
+
+    <!-- ══ ALL ASSETS ══ -->
+    <div class="tab-panel active" id="panel-all">
+
+      <!-- Stats -->
+      <div class="asset-stats">
+        <div class="stat-tile t-cyan">  <div class="tile-label">Total Assets</div>  <div class="tile-val" id="as-total">—</div>  <div class="tile-icon">🚗</div></div>
+        <div class="stat-tile t-green"> <div class="tile-label">Active</div>         <div class="tile-val" id="as-active">—</div> <div class="tile-icon">✅</div></div>
+        <div class="stat-tile t-warn">  <div class="tile-label">AMC Expiring</div>   <div class="tile-val" id="as-expiring">—</div><div class="tile-icon">⏳</div></div>
+        <div class="stat-tile t-pink">  <div class="tile-label">Expired AMC</div>    <div class="tile-val" id="as-expired">—</div> <div class="tile-icon">❌</div></div>
+        <div class="stat-tile t-purple"><div class="tile-label">Inactive</div>       <div class="tile-val" id="as-inactive">—</div><div class="tile-icon">⛔</div></div>
+      </div>
+
+      <div class="card">
+        <div class="section-head">
+          <div class="section-icon si-cyan">🚗</div>
+          <div><h2>Vehicle Assets</h2><p>Click any card to view full details, device links &amp; activity history</p></div>
+        </div>
+
+        <!-- Filters -->
+        <div class="filter-wrap">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+            <span style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--accent)">⚙ Filters</span>
+            <div style="display:flex;gap:8px;align-items:center">
+              <span id="f-count" style="font-size:10px;color:var(--muted)"></span>
+              <button class="btn btn-ghost btn-sm" onclick="clearFilters()">Clear</button>
+              <button class="btn btn-ghost btn-sm" onclick="loadAll()">↻ Refresh</button>
+            </div>
+          </div>
+          <div class="f-row f3">
+            <div><div style="font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:5px">Search</div>
+              <input class="fi" id="f-q" placeholder="Reg no., customer, IMEI, SIM, make, model, RAC…" oninput="applyFilters()"></div>
+            <div><div style="font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:5px">Status</div>
+              <select class="fi fi-s" id="f-status" onchange="applyFilters()">
+                <option value="">All Status</option>
+                <option>Active</option><option>Inactive</option><option>Expiring</option><option>Expired</option>
+              </select></div>
+            <div><div style="font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:5px">City</div>
+              <input class="fi" id="f-city" placeholder="City…" oninput="applyFilters()"></div>
+          </div>
+          <div class="f-row f4">
+            <div><div style="font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:5px">Make</div>
+              <input class="fi" id="f-make" placeholder="Toyota…" oninput="applyFilters()"></div>
+            <div><div style="font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:5px">Customer</div>
+              <input class="fi" id="f-cust" placeholder="Customer name…" oninput="applyFilters()"></div>
+            <div><div style="font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:5px">RAC / Company</div>
+              <input class="fi" id="f-rac" placeholder="RAC or company…" oninput="applyFilters()"></div>
+            <div><div style="font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:5px">Sort</div>
+              <select class="fi fi-s" id="f-sort" onchange="applyFilters()">
+                <option value="reg">Reg No.</option>
+                <option value="recent">Recently Added</option>
+                <option value="customer">Customer Name</option>
+                <option value="amc">AMC Expiry</option>
+              </select></div>
+          </div>
+        </div>
+
+        <!-- Results info + per-page -->
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+          <span id="res-info" style="font-size:11px;color:var(--muted)">—</span>
+          <div style="display:flex;align-items:center;gap:8px;font-size:10px;color:var(--muted)">Per page:
+            <select id="pp-sel" onchange="changePP()" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:var(--mono);font-size:11px;padding:5px 10px;outline:none;cursor:pointer">
+              <option value="12">12</option><option value="24" selected>24</option><option value="48">48</option><option value="96">96</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Cards -->
+        <div class="asset-grid" id="assetGrid">
+          <div style="color:var(--muted);font-size:12px;padding:40px;text-align:center;grid-column:1/-1">Click Refresh to load assets…</div>
+        </div>
+
+        <!-- Pagination -->
+        <div class="pg-bar">
+          <div class="pg-btns" id="pg-btns"></div>
+          <div class="pg-jump">Go to:
+            <input type="number" id="pg-inp" min="1" onkeydown="if(event.key==='Enter')jumpPg()">
+            <button class="btn btn-ghost btn-sm" onclick="jumpPg()">Go</button>
+          </div>
+        </div>
+      </div>
+    </div><!-- /panel-all -->
+
+    <!-- ══ ADD ASSET ══ -->
+    <div class="tab-panel" id="panel-add">
+      <div class="card">
+        <div class="section-head">
+          <div class="section-icon si-warn">🚗</div>
+          <div><h2 id="form-title">Add New Asset</h2><p id="form-sub">Register a vehicle in the fleet. Linked tracker &amp; SIM auto-populate from Inventory.</p></div>
+        </div>
+
+        <input type="hidden" id="asset-id">
+
+        <!-- Vehicle Details -->
+        <div class="divider-label">Vehicle Details</div>
+        <div class="form-grid-3">
+          <div class="field"><label>Registration Number *</label><input id="a-reg" placeholder="ABC-000"></div>
+          <div class="field"><label>Make *</label><input id="a-make" placeholder="Toyota, Honda…"></div>
+          <div class="field"><label>Model *</label><input id="a-model" placeholder="Corolla, Civic…"></div>
+          <div class="field"><label>Color</label><input id="a-color" placeholder="White, Silver…"></div>
+          <div class="field"><label>Year</label><input id="a-year" placeholder="2022" type="number" min="1990" max="2099"></div>
+          <div class="field"><label>Status</label>
+            <select id="a-status" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--mono);font-size:12px;padding:9px 13px;outline:none;appearance:none;cursor:pointer">
+              <option>Active</option><option>Inactive</option><option>Transferred</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-grid">
+          <div class="field"><label>Engine Number</label><input id="a-engine"></div>
+          <div class="field"><label>Chassis Number</label><input id="a-chassis"></div>
+        </div>
+
+        <!-- Customer -->
+        <div class="divider-label">Customer</div>
+        <div class="cust-wrap">
+          <div class="field" style="margin-bottom:8px">
+            <label>Search Customer</label>
+            <input class="fi" id="cust-search" placeholder="Type name, contact, company, CNIC, RAC…" oninput="searchCustForAsset(this.value)" autocomplete="off" style="font-size:12px;padding:10px 14px">
+          </div>
+          <div class="cust-dd" id="cust-dd-asset"></div>
+        </div>
+        <!-- Selected customer banner -->
+        <div id="sel-cust-banner" style="display:none;background:rgba(56,217,245,0.06);border:1px solid rgba(56,217,245,0.2);border-radius:10px;padding:11px 16px;margin-bottom:14px;display:none;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+          <div>
+            <div style="font-size:13px;font-weight:700;color:var(--text)" id="sel-cust-name"></div>
+            <div style="font-size:11px;color:var(--muted);margin-top:2px" id="sel-cust-meta"></div>
+          </div>
+          <button class="btn btn-ghost btn-sm" onclick="clearCustForAsset()">✕ Clear</button>
+        </div>
+        <!-- Hidden customer fields -->
+        <input type="hidden" id="a-custId">
+        <input type="hidden" id="a-custName">
+        <input type="hidden" id="a-custContact">
+        <input type="hidden" id="a-custRac">
+        <input type="hidden" id="a-custCompany">
+        <input type="hidden" id="a-custCity">
+
+        <!-- Fallback manual customer fields if no customer record -->
+        <div id="manual-cust-area" style="display:none">
+          <div class="form-grid">
+            <div class="field"><label>Customer Name</label><input id="a-manualCust" placeholder="Manual entry if not in database"></div>
+            <div class="field"><label>Contact</label><input id="a-manualContact"></div>
+            <div class="field"><label>RAC / Group</label><input id="a-manualRac"></div>
+            <div class="field"><label>City</label><input id="a-manualCity"></div>
+          </div>
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="toggleManualCust()" id="btn-manual" style="margin-bottom:16px;font-size:10px">＋ Enter customer manually instead</button>
+
+        <!-- Tracker & SIM -->
+        <div class="divider-label">Device Assignment</div>
+        <div class="form-grid">
+          <div style="position:relative">
+            <div class="field" style="margin-bottom:4px">
+              <label>Tracker IMEI</label>
+              <input id="a-imei" placeholder="Search or type IMEI…" oninput="searchTracker(this.value)" autocomplete="off" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--mono);font-size:12px;padding:9px 13px;outline:none;transition:all 0.2s">
+            </div>
+            <div class="tracker-dd" id="tracker-dd"></div>
+            <div style="font-size:10px;color:var(--muted);margin-bottom:14px" id="tracker-status-hint"></div>
+          </div>
+          <div style="position:relative">
+            <div class="field" style="margin-bottom:4px">
+              <label>SIM Number</label>
+              <input id="a-sim" placeholder="Search or type SIM no…" oninput="searchSIM(this.value)" autocomplete="off" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--mono);font-size:12px;padding:9px 13px;outline:none;transition:all 0.2s">
+            </div>
+            <div class="tracker-dd" id="sim-dd"></div>
+            <div style="font-size:10px;color:var(--muted);margin-bottom:14px" id="sim-status-hint"></div>
+          </div>
+        </div>
+
+        <!-- Installation -->
+        <div class="divider-label">Installation Details</div>
+        <div class="form-grid-3">
+          <div class="field"><label>Install Date</label><input type="date" id="a-installDate"></div>
+          <div class="field"><label>Installer</label><input id="a-installer" placeholder="Installer name"></div>
+          <div class="field"><label>Package</label><input id="a-package" placeholder="e.g. Standard"></div>
+          <div class="field"><label>AMC Duration</label><input id="a-amc" placeholder="e.g. 1 Year"></div>
+          <div class="field"><label>AMC Expiry Date</label><input type="date" id="a-amcExpiry"></div>
+          <div class="field"><label>City</label><input id="a-city" placeholder="Installation city"></div>
+        </div>
+
+        <div class="field"><label>Notes</label>
+          <textarea id="a-notes" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--mono);font-size:12px;padding:9px 13px;outline:none;height:70px;resize:none;transition:all 0.2s" placeholder="Any notes about this asset…"></textarea>
+        </div>
+
+        <div class="error-banner" id="asset-err"></div>
+        <div id="asset-ok" style="display:none;padding:11px 14px;background:rgba(61,255,160,0.08);border:1px solid rgba(61,255,160,0.3);border-radius:8px;color:var(--success);font-size:11px;margin-top:8px"></div>
+
+        <div style="display:flex;gap:10px;margin-top:18px;padding-top:16px;border-top:1px solid var(--border)">
+          <button class="btn btn-solid" onclick="saveAsset()">Save Asset</button>
+          <button class="btn btn-ghost" onclick="resetAssetForm()" id="btn-reset-form">Clear</button>
+        </div>
+      </div>
+    </div><!-- /panel-add -->
+
+  </div>
+</div>
+
+<!-- Asset Detail Drawer -->
+<div class="drw-overlay" id="assetDrawer">
+  <div class="drw">
+    <div class="drw-top">
+      <div>
+        <div class="drw-reg" id="dr-reg"></div>
+        <div class="drw-vehicle" id="dr-vehicle"></div>
+        <div class="drw-cust" id="dr-cust"></div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:flex-start">
+        <button class="btn btn-primary btn-sm" onclick="editAssetFromDrawer()">✏ Edit</button>
+        <button class="close-btn" onclick="closeDrawer()">✕</button>
+      </div>
+    </div>
+    <div class="drw-body" id="dr-body"></div>
+  </div>
+</div>
+
+<script src="assets.js"></script>
+</body>
+</html>

@@ -4,7 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Sales Leads — Fleet Management</title>
-<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<script src="crm-core.js"></script>
+<script>document.head.insertAdjacentHTML('beforeend', CRM_STYLE);</script>
 <style>
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -618,11 +619,7 @@ body::after { display: none; }
 </style>
 </head>
 <body>
-<script src="crm-core.js"></script>
-<script>
-const _u2 = crmGuard('leads');
-document.head.insertAdjacentHTML('beforeend', CRM_STYLE);
-</script>
+<script>const _u2 = crmGuard('leads');</script>
 
 <div class="crm-main">
 
@@ -778,7 +775,7 @@ document.head.insertAdjacentHTML('beforeend', CRM_STYLE);
           <div class="grid-2">
             <div class="field">
               <label>Assigned Sales Person</label>
-              <input name="salesPerson" id="salesPersonInput" placeholder="Name of sales rep" disabled>
+              <input name="salesPerson" id="salesPersonInput" placeholder="Name of sales rep">
             </div>
             <div class="field">
               <label>Date Forwarded</label>

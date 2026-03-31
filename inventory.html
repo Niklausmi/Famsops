@@ -5,9 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Inventory — FleetCRM</title>
 <script src="crm-core.js"></script>
+<script>document.head.insertAdjacentHTML('beforeend', CRM_STYLE);</script>
 </head>
 <body>
-<script>document.head.insertAdjacentHTML('beforeend', CRM_STYLE); const _gu = crmGuard('inventory');</script>
+<script>const _gu = crmGuard('inventory');</script>
 <style>
 .inv-tabs{display:flex;gap:6px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:5px;margin-bottom:24px}
 .inv-tab{flex:1;padding:10px 16px;border:none;border-radius:8px;background:transparent;color:var(--muted);font-family:var(--mono);font-size:11px;letter-spacing:1px;text-transform:uppercase;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;justify-content:center;gap:8px}

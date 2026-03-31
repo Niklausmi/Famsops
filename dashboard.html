@@ -88,11 +88,12 @@ if (user) {
 }
 const ALL_ACTIONS = [
   {icon:'🎯',label:'New Lead',     sub:'Forward to sales',   href:'sales_leads.html',       roles:['admin','sales']},
-  {icon:'📋',label:'New Job Order',sub:'Start installation', href:'vehicle_job_order.html', roles:['admin','operations']},
+  {icon:'📋',label:'New Job Order',sub:'Start installation', href:'job_orders.html',        roles:['admin','operations']},
   {icon:'📦',label:'Stock In',     sub:'Add to inventory',   href:'inventory.html',         roles:['admin','operations']},
   {icon:'📊',label:'All Leads',    sub:'View leads table',   href:'sales_leads.html',       roles:['admin','sales','management']},
-  {icon:'🔍',label:'Job Orders',   sub:'Browse all orders',  href:'vehicle_job_order.html', roles:['admin','operations','management']},
+  {icon:'🗂', label:'Job Orders',   sub:'Browse all orders',  href:'job_orders.html',        roles:['admin','sales','operations','management']},
   {icon:'💳',label:'SIM Inventory',sub:'Manage SIM cards',   href:'inventory.html',         roles:['admin','operations','management']},
+  {icon:'👤', label:'Customers',    sub:'View customer DB',   href:'customers.html',         roles:['admin','sales','operations','management']},
   {icon:'👥',label:'Manage Users', sub:'Add / edit users',   href:'users.html',             roles:['admin']},
 ];
 const actions = ALL_ACTIONS.filter(a => user && a.roles.includes(user.role));

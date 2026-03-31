@@ -4,14 +4,14 @@
 // ─────────────────────────────────────────────
 
 // ✏️  PASTE YOUR GOOGLE APPS SCRIPT URL HERE
-const CRM_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwbXQt8UVeGBZ7B9EwFlndrN5iA6g6dpSekdME3whOFSNh-ivnuhEcnG5pKnvptvDj0Yw/exec";
+const CRM_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx7sSh2d4wwbhS5yqHAEfxB4MA9Nf6ierD1hBs-4g7iR2wboglfHG9-iBxDslWBa81b0A/exec";
 
 // ── Role permissions ──
 const CRM_PERMISSIONS = {
-  admin:      ["dashboard","leads","joborder","jolist","customers","inventory","users"],
-  sales:      ["dashboard","leads","customers"],
-  operations: ["dashboard","joborder","jolist","customers","inventory"],
-  management: ["dashboard","leads","joborder","jolist","customers","inventory"],
+  admin:      ["dashboard","leads","jolist","customers","assets","inventory","users"],
+  sales:      ["dashboard","leads", "customers"],
+  operations: ["dashboard","jolist","customers","assets","inventory"],
+  management: ["dashboard","leads","jolist","customers","assets","inventory"],
 };
 
 // ────────────────────────────────────────────
@@ -224,13 +224,13 @@ function crmNav(activePage) {
   if (!user) return;
   const allowed = CRM_PERMISSIONS[user.role] || [];
   const links = [
-    { id:'dashboard', href:'dashboard.html',        icon:'⬡',  label:'Dashboard'   },
-    { id:'leads',     href:'sales_leads.html',       icon:'🎯', label:'Sales Leads' },
-    { id:'joborder',  href:'vehicle_job_order.html', icon:'📋', label:'New Job Order'},
-    { id:'jolist',    href:'job_orders.html',        icon:'🗂',  label:'Job Orders'  },
-    { id:'customers', href:'customers.html',         icon:'👤', label:'Customers'   },
-    { id:'inventory', href:'inventory.html',         icon:'📦', label:'Inventory'   },
-    { id:'users',     href:'users.html',             icon:'👥', label:'Users'       },
+    { id:'dashboard', href:'dashboard.html',   icon:'⬡',  label:'Dashboard'  },
+    { id:'leads',     href:'sales_leads.html', icon:'🎯', label:'Sales Leads'},
+    { id:'jolist',    href:'job_orders.html',  icon:'📋', label:'Job Orders' },
+    { id:'customers', href:'customers.html',   icon:'👤', label:'Customers'  },
+    { id:'assets',    href:'assets.html',      icon:'🚗', label:'Assets'     },
+    { id:'inventory', href:'inventory.html',   icon:'📦', label:'Inventory'  },
+    { id:'users',     href:'users.html',       icon:'👥', label:'Users'      },
   ];
   const navHTML = `
   <nav class="crm-nav">
