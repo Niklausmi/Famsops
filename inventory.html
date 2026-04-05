@@ -247,7 +247,7 @@ async function stockIn(type){
   try{
     const res=await crmPost(data);
     if(res.status==='error') throw new Error(res.message);
-    showBanner(okEl,'✓ Saved to Google Sheet (row '+( res.result?.rowNumber||'')+ ')');
+    showBanner(okEl,'✓ Saved to inventory');
     ['t-imei','t-model','t-supplier','t-price','t-notes','s-number','s-iccid','s-notes','s-plan'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
     ['t-qty','s-qty'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='1';});
     const sn=document.getElementById('s-network');if(sn)sn.value='';
@@ -260,7 +260,7 @@ function showBanner(el,msg){el.textContent=msg;el.style.display='block';}
 // ── Load Trackers ──
 async function loadTrackers(){
   const tb=document.getElementById('t-tbody');
-  tb.innerHTML='<tr><td colspan="12" style="text-align:center;padding:30px;color:var(--muted)">Loading from Google Sheets…</td></tr>';
+  tb.innerHTML='<tr><td colspan="12" style="text-align:center;padding:30px;color:var(--muted)">Loading…</td></tr>';
   try{
     const res=await crmGet({action:'getInventory',tab:'Trackers'});
     trackersData=res.data||[];
@@ -274,6 +274,7 @@ async function loadTrackers(){
     selectedTrackers.clear(); updateBulkBar('trackers');
   }catch(err){tb.innerHTML=`<tr><td colspan="12" style="text-align:center;padding:30px;color:var(--danger)">⚠ ${err.message||'Could not load'}</td></tr>`;}
 }
+
 
 function renderTrackers(data){
   const tb=document.getElementById('t-tbody');
@@ -308,7 +309,7 @@ function filterTrackers(){
 // ── Load SIMs ──
 async function loadSIMs(){
   const tb=document.getElementById('s-tbody');
-  tb.innerHTML='<tr><td colspan="10" style="text-align:center;padding:30px;color:var(--muted)">Loading from Google Sheets…</td></tr>';
+  tb.innerHTML='<tr><td colspan="10" style="text-align:center;padding:30px;color:var(--muted)">Loading…</td></tr>';
   try{
     const res=await crmGet({action:'getInventory',tab:'SIMs'});
     simsData=res.data||[];
@@ -579,4 +580,4 @@ function showToast(msg){
 }
 </script>
 </body>
-</html>
+</html> 

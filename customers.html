@@ -7,79 +7,94 @@
 <script src="crm-core.js"></script>
 <script>document.head.insertAdjacentHTML('beforeend', CRM_STYLE);</script>
 <style>
-body{display:block!important;padding:0!important}
-body::after{display:none}
-/* Tabs */
-.c-tabs{display:flex;gap:6px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:5px;margin-bottom:24px}
-.c-tab{flex:1;padding:10px 16px;border:none;border-radius:8px;background:transparent;color:var(--muted);font-family:var(--mono);font-size:11px;letter-spacing:1px;text-transform:uppercase;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;justify-content:center;gap:8px}
-.c-tab:hover:not(.active){color:var(--text)}
-.c-tab.active{background:rgba(56,217,245,0.1);color:var(--accent);border:1px solid rgba(56,217,245,0.2)}
-.c-panel{display:none}.c-panel.active{display:block}
-/* Stats */
-.c-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:22px}
-/* Filter bar */
-.filter-bar{display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;align-items:center}
-.fi{background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--mono);font-size:11px;padding:8px 12px;outline:none;transition:border-color 0.2s}
-.fi:focus{border-color:rgba(56,217,245,0.4)}.fi::placeholder{color:var(--muted)}
-.fi-sel{appearance:none;cursor:pointer;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath fill='%235a6070' d='M5 6L0 0h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:28px}
-.fi-sel option{background:#1a1e26}
+body{display:block!important;padding:0!important}body::after{display:none}
+/* Tab bar */
+.tab-bar{display:flex;gap:6px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:5px;margin-bottom:24px}
+.tab-btn{flex:1;padding:10px 16px;border:none;border-radius:8px;background:transparent;color:var(--muted);font-family:var(--mono);font-size:11px;letter-spacing:1px;text-transform:uppercase;cursor:pointer;transition:all 0.2s;text-align:center}
+.tab-btn.active{background:rgba(56,217,245,0.1);color:var(--accent);border:1px solid rgba(56,217,245,0.2)}
+.tab-btn:hover:not(.active){color:var(--text)}
+.tab-panel{display:none}.tab-panel.active{display:block}
+/* Search hero */
+.search-hero{background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:24px;margin-bottom:20px;text-align:center}
+.search-hero h2{font-family:var(--display);font-size:18px;font-weight:700;margin-bottom:6px}
+.search-hero p{font-size:11px;color:var(--muted);margin-bottom:18px}
+.big-search{display:flex;gap:10px;max-width:600px;margin:0 auto}
+.big-search input{flex:1;background:var(--surface);border:1px solid var(--border-hi);border-radius:10px;color:var(--text);font-family:var(--mono);font-size:13px;padding:12px 16px;outline:none;transition:all 0.2s}
+.big-search input:focus{border-color:rgba(56,217,245,0.5);box-shadow:0 0 0 3px rgba(56,217,245,0.08)}
+.big-search input::placeholder{color:var(--muted)}
 /* Customer cards */
+.cust-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:22px}
 .c-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
 .c-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px;cursor:pointer;transition:all 0.18s;position:relative}
-.c-card:hover{border-color:rgba(56,217,245,0.3);transform:translateY(-1px);box-shadow:0 4px 20px rgba(0,0,0,0.3)}
-.cc-head{display:flex;align-items:flex-start;gap:12px;margin-bottom:12px}
+.c-card:hover{border-color:rgba(56,217,245,0.35);transform:translateY(-1px);box-shadow:0 4px 24px rgba(0,0,0,0.35)}
 .cc-av{width:40px;height:40px;border-radius:10px;background:linear-gradient(135deg,var(--accent2),var(--accent));display:flex;align-items:center;justify-content:center;font-family:var(--display);font-size:14px;font-weight:800;color:#0a0c0f;flex-shrink:0}
-.cc-name{font-family:var(--display);font-size:13px;font-weight:700;color:var(--text)}
-.cc-sub{font-size:10px;color:var(--muted);margin-top:2px}
 .cc-id{position:absolute;top:12px;right:12px;font-size:9px;color:var(--muted);background:var(--surface2);border:1px solid var(--border);padding:2px 7px;border-radius:4px;font-family:var(--mono)}
-.cc-meta{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;padding-top:10px;border-top:1px solid var(--border)}
-.cc-m{text-align:center}
-.cc-m .val{font-family:var(--display);font-size:15px;font-weight:700;color:var(--text)}
-.cc-m .lbl{font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-top:2px}
-.cc-tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:8px}
-.cc-tag{font-size:9px;padding:2px 8px;border-radius:4px;background:var(--surface2);border:1px solid var(--border);color:var(--muted)}
+.cc-name{font-family:var(--display);font-size:13px;font-weight:700;color:var(--text)}
+.cc-company{font-size:10px;color:var(--accent2);margin-top:1px}
+.cc-contact{font-size:10px;color:var(--muted);margin-top:2px}
+.cc-meta{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;padding-top:10px;margin-top:10px;border-top:1px solid var(--border)}
+.cc-m .val{font-family:var(--display);font-size:15px;font-weight:700;text-align:center}
+.cc-m .lbl{font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-top:2px;text-align:center}
+/* Add customer form */
+.form-2{display:grid;grid-template-columns:1fr 1fr;gap:0 18px}
+.form-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0 18px}
+.span-2{grid-column:span 2}.span-3{grid-column:span 3}
 /* Pagination */
 .pg-simple{display:flex;align-items:center;justify-content:space-between;margin-top:16px;flex-wrap:wrap;gap:8px}
 .pg-info{font-size:11px;color:var(--muted)}
 .pg-nav{display:flex;gap:6px}
 .pg-nav button{padding:6px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--muted);font-family:var(--mono);font-size:11px;cursor:pointer;transition:all 0.15s}
 .pg-nav button:hover{border-color:var(--border-hi);color:var(--text)}.pg-nav button:disabled{opacity:0.3;cursor:not-allowed}
-/* Drawer */
-.drawer-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:200;display:none;align-items:flex-start;justify-content:flex-end}
-.drawer-overlay.open{display:flex}
-.drawer{background:var(--surface);border-left:1px solid var(--border-hi);width:100%;max-width:600px;height:100vh;overflow-y:auto;animation:slideIn 0.25s ease;padding:28px 30px}
+/* Customer Hub Drawer */
+.hub-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:300;display:none;align-items:flex-start;justify-content:flex-end}
+.hub-overlay.open{display:flex}
+.hub-drw{background:var(--surface);border-left:1px solid var(--border-hi);width:100%;max-width:700px;height:100vh;overflow-y:auto;animation:slideIn 0.25s ease;display:flex;flex-direction:column}
 @keyframes slideIn{from{transform:translateX(100%)}to{transform:translateX(0)}}
-.dr-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;padding-bottom:14px;border-bottom:1px solid var(--border)}
-.dr-head h3{font-family:var(--display);font-size:17px;font-weight:700}
-.close-btn{background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer;padding:4px 8px;border-radius:6px;transition:color 0.15s}
-.close-btn:hover{color:var(--text)}
-.sec-lbl{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin:16px 0 8px;padding-bottom:5px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
-.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.hub-top{padding:22px 26px 16px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--surface);z-index:10;flex-shrink:0}
+.hub-body{padding:22px 26px;flex:1}
+.hub-name{font-family:var(--display);font-size:20px;font-weight:800;color:var(--text)}
+.hub-company{font-size:12px;color:var(--accent2);margin-top:2px}
+.hub-contact{font-size:11px;color:var(--muted);margin-top:3px}
+.hub-id{font-size:10px;color:var(--muted2);font-family:var(--mono);margin-top:4px}
+.hub-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.ha-btn{display:flex;align-items:center;gap:7px;padding:9px 14px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-family:var(--mono);font-size:11px;cursor:pointer;transition:all 0.18s;text-decoration:none}
+.ha-btn:hover{border-color:var(--border-hi);background:rgba(255,255,255,0.04)}
+.ha-btn.primary{background:rgba(56,217,245,0.1);border-color:rgba(56,217,245,0.3);color:var(--accent)}
+.ha-btn.primary:hover{background:rgba(56,217,245,0.15)}
+.ha-btn.warn{background:rgba(255,179,71,0.1);border-color:rgba(255,179,71,0.3);color:var(--warn)}
+.ha-btn.danger{background:rgba(255,95,109,0.08);border-color:rgba(255,95,109,0.25);color:var(--danger)}
+/* Hub sections */
+.hub-sec{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin:20px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+.ig2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .ig-item{background:var(--surface2);border-radius:8px;padding:9px 12px}
 .ig-l{font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:3px}
 .ig-v{font-size:12px;color:var(--text);word-break:break-word}
-.v-row{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;margin-bottom:6px;display:flex;align-items:center;gap:12px}
-.v-reg{font-family:var(--mono);font-size:13px;font-weight:700;color:var(--accent);min-width:80px}
-.v-info{font-size:11px;color:var(--muted)}
-.jo-row-mini{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;margin-bottom:6px;display:flex;align-items:center;justify-content:space-between}
-.jo-mini-l .inv{font-size:11px;color:var(--accent);font-family:var(--mono)}
-.jo-mini-l .dt{font-size:10px;color:var(--muted);margin-top:1px}
-.jo-mini-r .pkg{font-size:11px;color:var(--text)}
-.jo-mini-r .toc{font-size:10px;color:var(--muted)}
-/* Customer search in form */
-.cust-lookup{position:relative}
-.cust-dropdown{position:absolute;top:100%;left:0;right:0;background:var(--surface);border:1px solid var(--border-hi);border-radius:0 0 10px 10px;z-index:100;max-height:240px;overflow-y:auto;display:none}
-.cust-dropdown.open{display:block}
-.cd-item{padding:10px 14px;cursor:pointer;border-bottom:1px solid var(--border);transition:background 0.12s;display:flex;align-items:center;gap:10px}
-.cd-item:last-child{border-bottom:none}
-.cd-item:hover{background:rgba(56,217,245,0.05)}
-.cd-av{width:28px;height:28px;border-radius:6px;background:linear-gradient(135deg,var(--accent2),var(--accent));display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#0a0c0f;flex-shrink:0}
-.cd-name{font-size:12px;color:var(--text);font-weight:500}
-.cd-sub{font-size:10px;color:var(--muted)}
-.cd-id{margin-left:auto;font-size:9px;color:var(--muted);font-family:var(--mono)}
-.selected-cust-box{background:rgba(56,217,245,0.06);border:1px solid rgba(56,217,245,0.25);border-radius:8px;padding:10px 14px;margin-top:8px;display:none;align-items:center;gap:10px;justify-content:space-between}
-.selected-cust-box.show{display:flex}
-@media(max-width:640px){.c-grid{grid-template-columns:1fr}.c-stats{grid-template-columns:1fr 1fr}}
+/* Asset mini cards */
+.asset-mini{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:all 0.15s}
+.asset-mini:hover{border-color:rgba(56,217,245,0.3);background:rgba(56,217,245,0.03)}
+.am-reg{font-family:var(--display);font-size:14px;font-weight:800;color:var(--accent);min-width:80px}
+.am-detail{flex:1;min-width:0}
+.am-vehicle{font-size:11px;color:var(--text)}
+.am-device{font-size:10px;color:var(--muted);font-family:var(--mono);margin-top:2px}
+/* Timeline */
+.tl-item{padding:10px 14px;border-left:2px solid var(--border);margin-left:8px;margin-bottom:2px;position:relative}
+.tl-item::before{content:'';position:absolute;left:-5px;top:14px;width:8px;height:8px;border-radius:50%;background:var(--border)}
+.tl-ticket{border-left-color:var(--accent)}.tl-ticket::before{background:var(--accent)}
+.tl-lead{border-left-color:var(--success)}.tl-lead::before{background:var(--success)}
+.tl-job{border-left-color:var(--accent2)}.tl-job::before{background:var(--accent2)}
+.tl-type{font-size:9px;letter-spacing:1px;text-transform:uppercase;font-weight:600}
+.tl-date{font-size:10px;color:var(--muted);float:right}
+.tl-detail{font-size:11px;color:var(--muted);margin-top:3px}
+.tl-ref{font-size:9px;color:var(--muted2);font-family:var(--mono);margin-top:2px}
+/* status badges */
+.sb{display:inline-block;font-size:9px;padding:2px 8px;border-radius:4px;text-transform:uppercase;letter-spacing:0.5px}
+.sb-open{background:rgba(56,217,245,0.1);color:var(--accent)}
+.sb-closed{background:rgba(90,96,112,0.15);color:var(--muted)}
+.sb-won{background:rgba(61,255,160,0.1);color:var(--success)}
+.sb-lost{background:rgba(90,96,112,0.15);color:var(--muted)}
+.sb-new{background:rgba(56,217,245,0.1);color:var(--accent)}
+@media(max-width:900px){.cust-stats{grid-template-columns:1fr 1fr}.c-grid{grid-template-columns:1fr}}
+@media(max-width:600px){.cust-stats{grid-template-columns:1fr 1fr}.form-2,.form-3{grid-template-columns:1fr}.span-2,.span-3{grid-column:span 1}}
 </style>
 </head>
 <body>
@@ -87,551 +102,161 @@ body::after{display:none}
 
 <div class="crm-main">
   <div class="crm-topbar">
-    <div><div class="page-title">Customers</div><div class="page-subtitle">Customer database — vehicles, devices &amp; job history</div></div>
+    <div><div class="page-title">Customers</div><div class="page-subtitle">Start here — search or create a customer to begin any process</div></div>
     <div class="topbar-right"><div class="topbar-time" id="clock"></div></div>
   </div>
 
   <div class="crm-content fade-up">
 
-    <!-- Tabs -->
-    <div class="c-tabs">
-      <button class="c-tab active" id="ctab-list" onclick="switchCTab('list',this)">👥 All Customers</button>
-      <button class="c-tab" id="ctab-new" onclick="switchCTab('new',this)">＋ Add Customer</button>
+    <!-- Tab bar -->
+    <div class="tab-bar">
+      <button class="tab-btn active" id="ctab-list" onclick="switchCTab('list',this)">👥 All Customers</button>
+      <button class="tab-btn"        id="ctab-add"  onclick="switchCTab('add',this)">＋ New Customer</button>
     </div>
 
     <!-- ══ ALL CUSTOMERS ══ -->
-    <div class="c-panel active" id="cpanel-list">
+    <div class="tab-panel active" id="cpanel-list">
 
-      <div class="c-stats">
-        <div class="stat-tile t-cyan"><div class="tile-label">Total Customers</div><div class="tile-val" id="cs-total">—</div><div class="tile-icon">👥</div></div>
-        <div class="stat-tile t-purple"><div class="tile-label">Total Vehicles</div><div class="tile-val" id="cs-vehicles">—</div><div class="tile-icon">🚗</div></div>
-        <div class="stat-tile t-green"><div class="tile-label">Active Devices</div><div class="tile-val" id="cs-devices">—</div><div class="tile-icon">📡</div></div>
-        <div class="stat-tile t-warn"><div class="tile-label">Cities Covered</div><div class="tile-val" id="cs-cities">—</div><div class="tile-icon">🏙</div></div>
+      <!-- Search hero -->
+      <div class="search-hero">
+        <h2>Find a Customer</h2>
+        <p>Search by name, contact, company, CNIC, RAC or Customer ID. Click a card to open their full hub.</p>
+        <div class="big-search">
+          <input id="main-search" placeholder="Type to search customers…" oninput="filterCustomers()" autocomplete="off">
+          <button class="btn btn-solid" onclick="switchCTab('add',document.getElementById('ctab-add'))">＋ New</button>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="cust-stats">
+        <div class="stat-tile t-cyan">  <div class="tile-label">Total Customers</div><div class="tile-val" id="cs-total">—</div> <div class="tile-icon">👥</div></div>
+        <div class="stat-tile t-purple"><div class="tile-label">Total Assets</div>   <div class="tile-val" id="cs-assets">—</div><div class="tile-icon">🚗</div></div>
+        <div class="stat-tile t-green"> <div class="tile-label">Open Tickets</div>   <div class="tile-val" id="cs-tickets">—</div><div class="tile-icon">🎫</div></div>
+        <div class="stat-tile t-warn">  <div class="tile-label">Active Leads</div>   <div class="tile-val" id="cs-leads">—</div> <div class="tile-icon">🎯</div></div>
       </div>
 
       <div class="card">
         <div class="section-head">
           <div class="section-icon si-cyan">👥</div>
-          <div><h2>Customer Database</h2><p>Click a card to view full history · built from job orders + manual entries</p></div>
+          <div><h2>Customer Database</h2><p>Click any card to open the full customer hub</p></div>
         </div>
-
-        <div class="filter-bar">
-          <input class="fi" id="cs-search" placeholder="Name, contact, company, RAC, city, CNIC, vehicle reg…" oninput="filterCustomers()" style="flex:1;min-width:220px">
-          <input class="fi" id="cs-city" placeholder="City…" oninput="filterCustomers()" style="width:120px">
-          <select class="fi fi-sel" id="cs-sort" onchange="filterCustomers()" style="width:150px">
-            <option value="name">Sort: Name</option>
+        <!-- Filters row -->
+        <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;align-items:center">
+          <input class="field" id="f-city" placeholder="Filter by city…" oninput="filterCustomers()" style="flex:1;min-width:120px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--mono);font-size:11px;padding:8px 12px;outline:none">
+          <input class="field" id="f-rac"  placeholder="RAC / Group…"    oninput="filterCustomers()" style="width:140px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--mono);font-size:11px;padding:8px 12px;outline:none">
+          <select id="f-sort" onchange="filterCustomers()" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--muted);font-family:var(--mono);font-size:11px;padding:8px 28px 8px 12px;outline:none;cursor:pointer;appearance:none;background-image:url('data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2710%27 height=%276%27%3E%3Cpath fill=%27%235a6070%27 d=%27M5 6L0 0h10z%27/%3E%3C/svg%3E');background-repeat:no-repeat;background-position:right 10px center">
+            <option value="name">Name A–Z</option>
+            <option value="recent">Recently Added</option>
             <option value="jobs">Most Jobs</option>
-            <option value="recent">Most Recent</option>
-            <option value="vehicles">Most Vehicles</option>
           </select>
           <button class="btn btn-ghost btn-sm" onclick="loadCustomers()">↻ Refresh</button>
         </div>
-
         <div style="font-size:11px;color:var(--muted);margin-bottom:12px" id="cs-info">—</div>
-        <div class="c-grid" id="cs-grid">
-          <div style="color:var(--muted);font-size:12px;padding:20px;grid-column:1/-1;text-align:center">Click Refresh to load customers…</div>
+        <div class="c-grid" id="cust-grid">
+          <div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--muted)">Click Refresh to load customers…</div>
         </div>
         <div class="pg-simple">
           <span class="pg-info" id="cs-pg-info"></span>
           <div class="pg-nav">
-            <button id="cs-prev" onclick="csPrev()">‹ Prev</button>
-            <button id="cs-next" onclick="csNext()">Next ›</button>
+            <button id="pg-prev" onclick="pgPrev()">‹ Prev</button>
+            <button id="pg-next" onclick="pgNext()">Next ›</button>
           </div>
         </div>
       </div>
-    </div>
+    </div><!-- /cpanel-list -->
 
     <!-- ══ ADD CUSTOMER ══ -->
-    <div class="c-panel" id="cpanel-new">
-      <div class="card" style="max-width:720px">
+    <div class="tab-panel" id="cpanel-add">
+      <div class="card">
         <div class="section-head">
-          <div class="section-icon si-cyan">＋</div>
-          <div><h2>Add New Customer</h2><p>Create a customer record with a unique ID — reusable across job orders and leads</p></div>
+          <div class="section-icon si-cyan">👤</div>
+          <div><h2 id="add-title">New Customer</h2><p>Auto-generates a unique Customer ID</p></div>
         </div>
-
-        <!-- Customer ID preview -->
-        <div style="background:rgba(56,217,245,0.06);border:1px solid rgba(56,217,245,0.2);border-radius:8px;padding:10px 14px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between">
-          <span style="font-size:10px;color:var(--muted)">Auto-generated Customer ID</span>
-          <span id="new-cust-id" style="font-family:var(--mono);font-size:13px;color:var(--accent);font-weight:700">CUS---------</span>
-        </div>
+        <input type="hidden" id="nc-id">
 
         <div class="divider">Personal Details</div>
-        <div class="grid-2">
-          <div class="field"><label>Full Name *</label><input id="nc-name" placeholder="Full legal name"></div>
-          <div class="field"><label>Contact Number *</label><input id="nc-contact" placeholder="+92 XXX XXXXXXX"></div>
+        <div class="form-2">
+          <div class="field span-2"><label>Customer Name *</label><input id="nc-name" placeholder="Full legal name"></div>
+          <div class="field"><label>Contact Number *</label><input id="nc-contact" placeholder="+92 3XX XXXXXXX"></div>
+          <div class="field"><label>Email</label><input type="email" id="nc-email" placeholder="email@example.com"></div>
           <div class="field"><label>CNIC</label><input id="nc-cnic" placeholder="XXXXX-XXXXXXX-X"></div>
-          <div class="field"><label>Father's Name</label><input id="nc-father" placeholder="Father name"></div>
-          <div class="field col-span-2"><label>Email</label><input type="email" id="nc-email" placeholder="email@example.com"></div>
+          <div class="field"><label>Father's Name</label><input id="nc-father"></div>
         </div>
 
         <div class="divider">Company / Organization</div>
-        <div class="grid-2">
-          <div class="field"><label>Company Name</label><input id="nc-company" placeholder="Company or business name"></div>
-          <div class="field"><label>RAC / Group</label><input id="nc-rac" placeholder="RAC or group name"></div>
+        <div class="form-3">
+          <div class="field"><label>Company Name</label><input id="nc-company" placeholder="Company or business"></div>
+          <div class="field"><label>RAC / Group</label><input id="nc-rac" placeholder="Fleet group code"></div>
           <div class="field"><label>Designation</label><input id="nc-designation" placeholder="e.g. Fleet Manager"></div>
           <div class="field"><label>Industry</label>
-            <select id="nc-industry" class="field-sel" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--mono);font-size:12px;padding:9px 13px;outline:none;appearance:none">
+            <select id="nc-industry" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--mono);font-size:12px;padding:9px 13px;outline:none;appearance:none">
               <option value="">Select…</option>
-              <option>Logistics / Transport</option><option>Construction</option>
-              <option>Healthcare</option><option>Retail / FMCG</option>
-              <option>Manufacturing</option><option>Government</option>
-              <option>Education</option><option>Real Estate</option>
-              <option>Individual / Personal</option><option>Other</option>
+              <option>Logistics / Transport</option><option>Construction</option><option>Healthcare</option>
+              <option>Retail / FMCG</option><option>Manufacturing</option><option>Government</option>
+              <option>Real Estate</option><option>Individual / Personal</option><option>Other</option>
+            </select>
+          </div>
+          <div class="field"><label>Customer Type</label>
+            <select id="nc-type" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--mono);font-size:12px;padding:9px 13px;outline:none;appearance:none">
+              <option value="individual">Individual</option><option value="corporate">Corporate</option><option value="fleet">Fleet Owner</option>
+            </select>
+          </div>
+          <div class="field"><label>Preferred Payment</label>
+            <select id="nc-payment" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--mono);font-size:12px;padding:9px 13px;outline:none;appearance:none">
+              <option value="">Select…</option>
+              <option>Cash</option><option>Bank Transfer</option><option>Cheque</option><option>Online / Mobile</option>
             </select>
           </div>
         </div>
 
         <div class="divider">Location</div>
-        <div class="grid-2">
-          <div class="field"><label>City</label><input id="nc-city" placeholder="Lahore, Karachi…"></div>
+        <div class="form-2">
+          <div class="field"><label>City *</label><input id="nc-city" placeholder="Lahore, Karachi…"></div>
           <div class="field"><label>Area</label><input id="nc-area" placeholder="DHA, Gulberg…"></div>
-          <div class="field col-span-2"><label>Postal Address</label><textarea id="nc-address" style="height:70px" placeholder="Full postal address"></textarea></div>
+          <div class="field span-2"><label>Postal Address</label><textarea id="nc-address" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--mono);font-size:12px;padding:9px 13px;outline:none;height:64px;resize:none" placeholder="Full postal address"></textarea></div>
         </div>
 
-        <div class="divider">Additional</div>
-        <div class="grid-2">
-          <div class="field"><label>Preferred Payment</label>
-            <select id="nc-payment" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--mono);font-size:12px;padding:9px 13px;outline:none;appearance:none">
-              <option value="">Select…</option>
-              <option>Cash</option><option>Bank Transfer</option>
-              <option>Cheque</option><option>Online / Mobile</option>
-            </select>
-          </div>
-          <div class="field"><label>Customer Type</label>
-            <select id="nc-type" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--mono);font-size:12px;padding:9px 13px;outline:none;appearance:none">
-              <option value="individual">Individual</option>
-              <option value="corporate">Corporate</option>
-              <option value="fleet">Fleet Owner</option>
-            </select>
-          </div>
-          <div class="field col-span-2"><label>Notes</label><textarea id="nc-notes" style="height:60px" placeholder="Any additional notes…"></textarea></div>
-        </div>
+        <div class="field"><label>Notes</label><textarea id="nc-notes" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--mono);font-size:12px;padding:9px 13px;outline:none;height:54px;resize:none" placeholder="Internal notes…"></textarea></div>
 
         <div class="error-banner" id="nc-err"></div>
         <div class="success-flash" id="nc-ok"></div>
 
-        <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:20px;padding-top:16px;border-top:1px solid var(--border)">
-          <button class="btn btn-ghost" onclick="clearNewCust()">Clear</button>
-          <button class="btn btn-solid" onclick="saveNewCustomer()">Save Customer</button>
+        <div style="display:flex;gap:10px;margin-top:16px;padding-top:14px;border-top:1px solid var(--border)">
+          <button class="btn btn-solid" onclick="saveCustomer()">Save Customer</button>
+          <button class="btn btn-ghost" onclick="clearCustomerForm()">Clear</button>
         </div>
       </div>
-    </div>
+    </div><!-- /cpanel-add -->
 
   </div>
 </div>
 
-<!-- Customer Detail Drawer -->
-<div class="drawer-overlay" id="custDrawer">
-  <div class="drawer">
-    <div class="dr-head">
-      <h3 id="dr-name">Customer</h3>
-      <div style="display:flex;gap:8px;align-items:center">
-        <button class="btn btn-primary btn-sm" id="btn-edit-cust" onclick="toggleDrawerEdit()">Edit</button>
-        <button class="close-btn" onclick="closeDrawer()">✕</button>
+<!-- Customer Hub Drawer -->
+<div class="hub-overlay" id="hubOverlay">
+  <div class="hub-drw">
+    <div class="hub-top">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between">
+        <div style="flex:1;min-width:0">
+          <div class="hub-name" id="hub-name"></div>
+          <div class="hub-company" id="hub-company"></div>
+          <div class="hub-contact" id="hub-contact"></div>
+          <div class="hub-id" id="hub-id"></div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;flex-shrink:0;margin-left:14px">
+          <button class="btn btn-primary btn-sm" id="hub-edit-btn" onclick="toggleHubEdit()">✏ Edit</button>
+          <button onclick="closeHub()" style="background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer;padding:4px 8px;border-radius:6px;transition:color 0.15s" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted)'">✕</button>
+        </div>
       </div>
+      <!-- Action buttons — process entry points -->
+      <div class="hub-actions" id="hub-actions"></div>
     </div>
-    <div id="dr-edit-form" style="display:none"></div>
-    <div id="dr-body"></div>
+    <!-- Edit form (shown when edit mode active) -->
+    <div id="hub-edit-form" style="display:none;padding:22px 26px;border-bottom:1px solid var(--border)"></div>
+    <!-- Hub body — view mode -->
+    <div class="hub-body" id="hub-body"></div>
   </div>
 </div>
 
-<script>
-crmNav('customers');
-startClock(document.getElementById('clock'));
-
-// ── Drawer Edit Mode ──
-let _editId = null;
-
-function toggleDrawerEdit(){
-  const editForm = document.getElementById('dr-edit-form');
-  const viewBody = document.getElementById('dr-body');
-  const btn      = document.getElementById('btn-edit-cust');
-  const isEdit   = editForm.style.display !== 'none';
-
-  if(isEdit){
-    editForm.style.display = 'none';
-    viewBody.style.display = 'block';
-    btn.textContent = 'Edit';
-    return;
-  }
-
-  const c = custDB[_editId]; if(!c) return;
-  const fi = (id, lbl, val, type='text') =>
-    `<div class="field"><label>${lbl}</label><input type="${type}" id="ef-${id}" value="${(val||'').replace(/"/g,'&quot;')}" style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--mono);font-size:11px;padding:8px 12px;outline:none;transition:border-color 0.2s"></div>`;
-  const ft = (id, lbl, val) =>
-    `<div class="field"><label>${lbl}</label><textarea id="ef-${id}" style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--mono);font-size:11px;padding:8px 12px;outline:none;height:64px;resize:none">${val||''}</textarea></div>`;
-
-  editForm.innerHTML = `
-    <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--accent2);margin-bottom:14px;font-weight:500">Edit Customer</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 14px">
-      ${fi('name','Customer Name *', c.name)}
-      ${fi('contact','Contact *', c.contact)}
-      ${fi('company','Company', c.company)}
-      ${fi('rac','RAC / Group', c.rac)}
-      ${fi('email','Email', c.email, 'email')}
-      ${fi('city','City', c.city)}
-      ${fi('area','Area', c.area)}
-      ${fi('cnic','CNIC', c.cnic)}
-      ${fi('father',"Father's Name", c.father)}
-      ${fi('designation','Designation', c.designation)}
-    </div>
-    ${ft('address','Postal Address', c.address)}
-    ${ft('notes','Notes', c.notes)}
-    <div class="error-banner" id="ef-err"></div>
-    <div style="display:flex;gap:8px;margin-top:14px">
-      <button class="btn btn-solid" onclick="saveDrawerEdit()">Save Changes</button>
-      <button class="btn btn-ghost" onclick="toggleDrawerEdit()">Cancel</button>
-    </div>`;
-
-  editForm.style.display = 'block';
-  viewBody.style.display = 'none';
-  btn.textContent = 'Cancel';
-}
-
-async function saveDrawerEdit(){
-  const c = custDB[_editId]; if(!c) return;
-  const errEl = document.getElementById('ef-err');
-  const name    = document.getElementById('ef-name').value.trim();
-  const contact = document.getElementById('ef-contact').value.trim();
-  errEl.style.display='none';
-  if(!name)   { errEl.textContent='⚠ Name required';    errEl.style.display='block'; return; }
-  if(!contact){ errEl.textContent='⚠ Contact required'; errEl.style.display='block'; return; }
-
-  const updates = {
-    action:'submitCustomer', sheetTab:'Customers',
-    customerId:   c.customerId,
-    createdAt:    c.createdAt || new Date().toISOString().split('T')[0],
-    customerName: name,
-    contact,
-    company:      document.getElementById('ef-company').value.trim(),
-    rac:          document.getElementById('ef-rac').value.trim(),
-    email:        document.getElementById('ef-email').value.trim(),
-    city:         document.getElementById('ef-city').value.trim(),
-    area:         document.getElementById('ef-area').value.trim(),
-    cnic:         document.getElementById('ef-cnic').value.trim(),
-    father:       document.getElementById('ef-father').value.trim(),
-    designation:  document.getElementById('ef-designation').value.trim(),
-    address:      document.getElementById('ef-address').value.trim(),
-    notes:        document.getElementById('ef-notes').value.trim(),
-    totalJobs:    c.jobs.length,
-    lastJobDate:  c.lastDate||'',
-  };
-
-  try{
-    const res = await crmPost(updates);
-    if(res.status==='error') throw new Error(res.message);
-    // Update local custDB
-    c.name        = name;
-    c.contact     = contact;
-    c.company     = updates.company;
-    c.rac         = updates.rac;
-    c.email       = updates.email;
-    c.city        = updates.city;
-    c.area        = updates.area;
-    c.cnic        = updates.cnic;
-    c.father      = updates.father;
-    c.designation = updates.designation;
-    c.address     = updates.address;
-    c.notes       = updates.notes;
-    // Refresh drawer view and cards
-    toggleDrawerEdit();
-    openDrawer(encodeURIComponent(_editId));
-    filterCustomers();
-    showToast('✓ Customer updated');
-  }catch(err){
-    errEl.textContent='⚠ '+(err.message||'Save failed');
-    errEl.style.display='block';
-  }
-}
-
-let allJOs=[], custDB={}, filteredCusts=[], csPage=1, csPerPage=24;
-
-// ── Tab switch ──
-function switchCTab(name, btn){
-  document.querySelectorAll('.c-panel').forEach(p=>p.classList.remove('active'));
-  document.querySelectorAll('.c-tab').forEach(b=>b.classList.remove('active'));
-  document.getElementById('cpanel-'+name).classList.add('active');
-  btn.classList.add('active');
-  if(name==='new') genNewCustId();
-}
-
-// ── Load ──
-async function loadCustomers(){
-  document.getElementById('cs-grid').innerHTML='<div style="color:var(--muted);font-size:12px;padding:20px;grid-column:1/-1;text-align:center">Loading…</div>';
-  try{
-    // Load job orders (for history) AND customer records if they exist
-    const [joRes, custRes] = await Promise.allSettled([
-      crmGet({action:'getJobOrders'}),
-      crmGet({action:'getCustomers'})
-    ]);
-    allJOs = joRes.status==='fulfilled' ? (joRes.value.data||[]) : [];
-    const manualCusts = custRes.status==='fulfilled' ? (custRes.value.data||[]) : [];
-    buildCustDB(manualCusts);
-    filterCustomers();
-  }catch(err){
-    document.getElementById('cs-grid').innerHTML='<div style="color:var(--danger);font-size:12px;padding:20px;grid-column:1/-1;text-align:center">⚠ '+(err.message||'Could not load')+'</div>';
-  }
-}
-
-function buildCustDB(manualCusts){
-  custDB={};
-  // First seed from manual customer records
-  manualCusts.forEach(c=>{
-    const key=c.customerId||('auto_'+c.name+'_'+c.contact);
-    custDB[key]={
-      customerId:c.customerId||key,
-      name:c.customerName||c.name||'',contact:c.contact||'',email:c.email||'',
-      cnic:c.cnic||'',father:c.father||'',
-      company:c.company||'',rac:c.rac||'',designation:c.designation||'',
-      industry:c.industry||'',city:c.city||'',area:c.area||'',
-      address:c.address||'',payment:c.preferredPayment||'',
-      type:c.customerType||'individual',notes:c.notes||'',
-      jobs:[],vehicles:[],devices:[],lastDate:'',
-      source:'manual'
-    };
-  });
-  // Merge job order data
-  allJOs.forEach(jo=>{
-    // Try to match by customerId first, then by name+contact
-    let key = jo.customerId || null;
-    if(!key){
-      // Find matching manual record
-      const match = Object.values(custDB).find(c=>
-        c.name.toLowerCase()===(jo.customer||'').trim().toLowerCase() &&
-        c.contact===(jo.contact||'').trim()
-      );
-      key = match ? match.customerId : 'jo_'+(jo.customer||'unknown').trim()+'_'+(jo.contact||'').trim();
-    }
-    if(!custDB[key]){
-      custDB[key]={
-        customerId:key,name:jo.customer||'Unknown',contact:jo.contact||'',
-        email:jo.email||'',cnic:jo.cnic||'',father:jo.father||'',
-        company:'',rac:jo.rac||'',designation:'',industry:'',
-        city:jo.city||'',area:jo.area||'',address:jo.address||'',
-        payment:'',type:'individual',notes:'',
-        jobs:[],vehicles:[],devices:[],lastDate:'',source:'joborder'
-      };
-    }
-    const c=custDB[key];
-    c.jobs.push(jo);
-    if(jo.vehicle&&!c.vehicles.find(v=>v.reg===jo.vehicle))
-      c.vehicles.push({reg:jo.vehicle,make:jo.make,model:jo.model,color:jo.color,engine:jo.engine,chassis:jo.chassis});
-    if(jo.imei&&!c.devices.find(d=>d.imei===jo.imei))
-      c.devices.push({imei:jo.imei,serial:jo.serial,gsm:jo.gsm,vehicle:jo.vehicle,date:jo.date});
-    if(!c.lastDate||jo.date>c.lastDate)c.lastDate=jo.date;
-    // Fill blanks from JO
-    if(!c.rac&&jo.rac)c.rac=jo.rac;
-    if(!c.city&&jo.city)c.city=jo.city;
-  });
-
-  const custs=Object.values(custDB);
-  document.getElementById('cs-total').textContent=custs.length;
-  document.getElementById('cs-vehicles').textContent=custs.reduce((a,c)=>a+c.vehicles.length,0);
-  document.getElementById('cs-devices').textContent=custs.reduce((a,c)=>a+c.devices.length,0);
-  const cities=new Set(custs.map(c=>c.city).filter(Boolean));
-  document.getElementById('cs-cities').textContent=cities.size;
-}
-
-function filterCustomers(){
-  const q=(document.getElementById('cs-search').value||'').toLowerCase().trim();
-  const city=(document.getElementById('cs-city').value||'').toLowerCase().trim();
-  const sort=document.getElementById('cs-sort').value;
-
-  let custs=Object.values(custDB).filter(c=>{
-    const mq=!q||[c.name,c.contact,c.email,c.company,c.rac,c.city,c.cnic,c.customerId,
-      ...c.vehicles.map(v=>v.reg),...c.devices.map(d=>d.imei)].some(v=>(v||'').toLowerCase().includes(q));
-    const mc=!city||(c.city||'').toLowerCase().includes(city);
-    return mq&&mc;
-  });
-
-  if(sort==='name')    custs.sort((a,b)=>a.name.localeCompare(b.name));
-  if(sort==='jobs')    custs.sort((a,b)=>b.jobs.length-a.jobs.length);
-  if(sort==='recent')  custs.sort((a,b)=>(b.lastDate||'').localeCompare(a.lastDate||''));
-  if(sort==='vehicles')custs.sort((a,b)=>b.vehicles.length-a.vehicles.length);
-
-  filteredCusts=custs;csPage=1;renderCustomers();
-}
-
-function renderCustomers(){
-  const grid=document.getElementById('cs-grid');
-  const total=filteredCusts.length,pages=Math.max(1,Math.ceil(total/csPerPage));
-  csPage=Math.min(csPage,pages);
-  const start=(csPage-1)*csPerPage,slice=filteredCusts.slice(start,start+csPerPage);
-
-  document.getElementById('cs-info').textContent=total===0?'No customers found':
-    'Showing '+(start+1)+'–'+Math.min(start+csPerPage,total)+' of '+total+' customers';
-
-  if(!slice.length){grid.innerHTML='<div class="empty-state" style="grid-column:1/-1"><div class="ei">👥</div><p>No customers match</p></div>';return;}
-
-  grid.innerHTML=slice.map(c=>{
-    const initials=c.name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase()||'??';
-    const safeId=encodeURIComponent(c.customerId);
-    return `<div class="c-card" onclick="openDrawer('${safeId}')">
-      <div class="cc-id">${c.customerId.startsWith('CUST-')||c.customerId.startsWith('CUS-')?c.customerId:c.customerId.slice(0,14)+'…'}</div>
-      <div class="cc-head">
-        <div class="cc-av">${initials}</div>
-        <div>
-          <div class="cc-name">${c.name}</div>
-          <div class="cc-sub">${c.contact||'—'}${c.company?' · '+c.company:''}</div>
-          <div class="cc-sub" style="margin-top:2px">${c.city||''}${c.rac?' · RAC: '+c.rac:''}</div>
-        </div>
-      </div>
-      ${(c.company||c.rac)?`<div class="cc-tags">${c.company?`<span class="cc-tag">🏢 ${c.company}</span>`:''}${c.rac?`<span class="cc-tag">🔖 ${c.rac}</span>`:''}</div>`:''}
-      <div class="cc-meta">
-        <div class="cc-m"><div class="val">${c.jobs.length}</div><div class="lbl">Orders</div></div>
-        <div class="cc-m"><div class="val">${c.vehicles.length}</div><div class="lbl">Vehicles</div></div>
-        <div class="cc-m"><div class="val">${c.devices.length}</div><div class="lbl">Devices</div></div>
-      </div>
-    </div>`;
-  }).join('');
-
-  document.getElementById('cs-pg-info').textContent='Page '+csPage+' of '+pages;
-  document.getElementById('cs-prev').disabled=csPage===1;
-  document.getElementById('cs-next').disabled=csPage===pages;
-}
-
-function csPrev(){if(csPage>1){csPage--;renderCustomers();}}
-function csNext(){const p=Math.ceil(filteredCusts.length/csPerPage);if(csPage<p){csPage++;renderCustomers();}}
-
-// ── Customer Drawer ──
-function openDrawer(safeId){
-  const id=decodeURIComponent(safeId);
-  const c=custDB[id];if(!c)return;
-  _editId=id;
-  // Reset edit state
-  document.getElementById('dr-edit-form').style.display='none';
-  document.getElementById('dr-body').style.display='block';
-  document.getElementById('btn-edit-cust').textContent='Edit';
-  document.getElementById('dr-name').textContent=c.name;
-  const f=(l,v)=>v?`<div class="ig-item"><div class="ig-l">${l}</div><div class="ig-v">${v}</div></div>`:'';
-  document.getElementById('dr-body').innerHTML=`
-    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between">
-      <div><span style="font-size:9px;color:var(--muted);letter-spacing:1px;text-transform:uppercase">Customer ID</span><br>
-        <span style="font-family:var(--mono);font-size:13px;color:var(--accent)">${c.customerId}</span></div>
-      <span class="badge badge-${c.type==='corporate'?'contacted':c.type==='fleet'?'won':'pending'}">${c.type||'individual'}</span>
-    </div>
-
-    <div class="sec-lbl">Contact</div>
-    <div class="info-grid">
-      ${f('Phone',c.contact)}${f('Email',c.email)}
-      ${f('City',c.city+(c.area?' · '+c.area:''))}${f('CNIC',c.cnic)}
-      ${f('Father',c.father)}${f('Preferred Payment',c.payment)}
-    </div>
-    ${c.address?`<div style="background:var(--surface2);border-radius:8px;padding:9px 12px;margin-top:6px;font-size:12px;color:var(--muted)"><div class="ig-l">Address</div>${c.address}</div>`:''}
-
-    ${(c.company||c.rac||c.designation||c.industry)?`
-    <div class="sec-lbl">Company / Organization</div>
-    <div class="info-grid">
-      ${f('Company',c.company)}${f('RAC / Group',c.rac)}
-      ${f('Designation',c.designation)}${f('Industry',c.industry)}
-    </div>`:''}
-
-    <div class="sec-lbl">Vehicles (${c.vehicles.length})</div>
-    ${c.vehicles.length?c.vehicles.map(v=>`
-      <div class="v-row">
-        <div class="v-reg">${v.reg||'—'}</div>
-        <div><div class="v-info">${[v.make,v.model,v.color].filter(Boolean).join(' · ')||'—'}</div>
-          <div class="v-info" style="font-size:10px">Engine: ${v.engine||'—'}</div></div>
-      </div>`).join(''):'<div style="color:var(--muted);font-size:12px;padding:6px 0">No vehicles recorded</div>'}
-
-    <div class="sec-lbl">Devices (${c.devices.length})</div>
-    ${c.devices.length?c.devices.map(d=>`
-      <div class="v-row">
-        <div>
-          <div style="font-family:var(--mono);font-size:11px;color:var(--accent)">${d.imei||'—'}</div>
-          <div class="v-info">GSM: ${d.gsm||'—'} · ${d.vehicle||'—'} · ${d.date||'—'}</div>
-        </div>
-      </div>`).join(''):'<div style="color:var(--muted);font-size:12px;padding:6px 0">No devices recorded</div>'}
-
-    <div class="sec-lbl">Job History (${c.jobs.length})</div>
-    ${c.jobs.sort((a,b)=>(b.date||'').localeCompare(a.date||'')).map(jo=>`
-      <div class="jo-row-mini">
-        <div class="jo-mini-l">
-          <div class="inv">${jo.invoiceNumber||'—'}</div>
-          <div class="dt">${jo.date||'—'} · ${jo.city||'—'}</div>
-        </div>
-        <div class="jo-mini-r">
-          <div class="pkg">${jo.package||'—'}</div>
-          <div class="toc">${jo.toc||'—'}</div>
-        </div>
-      </div>`).join('')||'<div style="color:var(--muted);font-size:12px;padding:6px 0">No orders yet</div>'}
-
-    ${c.notes?`<div class="sec-lbl">Notes</div><div style="background:var(--surface2);border-radius:8px;padding:10px 12px;font-size:12px;color:var(--muted)">${c.notes}</div>`:''}
-
-    <div style="margin-top:16px;display:flex;gap:8px;flex-wrap:wrap">
-      <a href="job_orders.html" class="btn btn-primary btn-sm">＋ New Job Order</a>
-      <a href="sales_leads.html" class="btn btn-ghost btn-sm">🎯 New Lead</a>
-    </div>`;
-  document.getElementById('custDrawer').classList.add('open');
-}
-
-function closeDrawer(){document.getElementById('custDrawer').classList.remove('open');}
-document.getElementById('custDrawer').addEventListener('click',e=>{if(e.target===document.getElementById('custDrawer'))closeDrawer();});
-
-// ── Add new customer ──
-function genNewCustId(){
-  const id='CUST-'+Date.now().toString(36).toUpperCase().slice(-8);
-  document.getElementById('new-cust-id').textContent=id;
-  return id;
-}
-
-function clearNewCust(){
-  ['nc-name','nc-contact','nc-cnic','nc-father','nc-email','nc-company','nc-rac',
-   'nc-designation','nc-city','nc-area','nc-address','nc-notes'].forEach(id=>{
-    const el=document.getElementById(id);if(el)el.value='';
-  });
-  ['nc-industry','nc-payment','nc-type'].forEach(id=>{const el=document.getElementById(id);if(el)el.selectedIndex=0;});
-  document.getElementById('nc-err').style.display='none';
-  document.getElementById('nc-ok').style.display='none';
-  genNewCustId();
-}
-
-async function saveNewCustomer(){
-  const name=document.getElementById('nc-name').value.trim();
-  const contact=document.getElementById('nc-contact').value.trim();
-  const errEl=document.getElementById('nc-err');
-  const okEl=document.getElementById('nc-ok');
-  errEl.style.display='none';okEl.style.display='none';
-
-  if(!name){errEl.textContent='⚠ Customer name is required';errEl.style.display='block';return;}
-  if(!contact){errEl.textContent='⚠ Contact number is required';errEl.style.display='block';return;}
-
-  const customerId=document.getElementById('new-cust-id').textContent;
-  const user=crmCurrentUser();
-  const data={
-    action:'submitCustomer',
-    sheetTab:'Customers',
-    customerId,
-    createdAt: new Date().toISOString().split('T')[0],
-    customerName:name, contact,
-    email:document.getElementById('nc-email').value.trim(),
-    cnic:document.getElementById('nc-cnic').value.trim(),
-    father:document.getElementById('nc-father').value.trim(),
-    company:document.getElementById('nc-company').value.trim(),
-    rac:document.getElementById('nc-rac').value.trim(),
-    designation:document.getElementById('nc-designation').value.trim(),
-    industry:document.getElementById('nc-industry').value,
-    city:document.getElementById('nc-city').value.trim(),
-    area:document.getElementById('nc-area').value.trim(),
-    address:document.getElementById('nc-address').value.trim(),
-    preferredPayment:document.getElementById('nc-payment').value,
-    customerType:document.getElementById('nc-type').value,
-    notes:document.getElementById('nc-notes').value.trim(),
-    createdBy:user?user.name:'Unknown',
-    createdAt:new Date().toISOString().split('T')[0],
-  };
-
-  try{
-    const res=await crmPost(data);
-    if(res.status==='error') throw new Error(res.message);
-    okEl.textContent='✓ Customer '+customerId+' saved successfully';
-    okEl.style.display='block';
-    setTimeout(()=>{clearNewCust();switchCTab('list',document.getElementById('ctab-list'));loadCustomers();},1800);
-  }catch(err){
-    errEl.textContent='⚠ Save failed: '+(err.message||'check connection');
-    errEl.style.display='block';
-  }
-}
-</script>
+<script src="customers.js"></script>
 </body>
 </html>

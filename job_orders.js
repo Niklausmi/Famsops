@@ -15,11 +15,141 @@ function switchTab(name, btn) {
 // ══════════════════════════════════════
 //  CUSTOMER LOOKUP
 // ══════════════════════════════════════
-let allCustomers = [], selectedCust = null;
+let allCustomers = [], selectedCust = null, selectedCustomer = null;
+let allAssets = [], allTrackers = [], allSIMs = [];
 
-(async function loadCusts(){
-  try { const r = await crmGet({action:'getCustomers'}); allCustomers = r.data||[]; } catch{}
+(async function initData(){
+  try {
+    const [cr, ar, tr, si] = await Promise.allSettled([
+      crmGet({ action: 'getCustomers' }),
+      crmGet({ action: 'getAssets' }),
+      crmGet({ action: 'getInventory', tab: 'Trackers' }),
+      crmGet({ action: 'getInventory', tab: 'SIMs' }),
+    ]);
+    allCustomers = cr.status === 'fulfilled' ? (cr.value.data || []) : [];
+    allAssets    = ar.status === 'fulfilled' ? (ar.value.data || []) : [];
+    allTrackers  = tr.status === 'fulfilled' ? (tr.value.data || []) : [];
+    allSIMs      = si.status === 'fulfilled' ? (si.value.data || []) : [];
+
+    // Check for prefill from tickets / customers hub
+    const pf = sessionStorage.getItem('crm_prefill');
+    if (pf) {
+      try {
+        const d = JSON.parse(pf);
+        sessionStorage.removeItem('crm_prefill');
+        if (d.source === 'ticket' || d.source === 'customer') {
+          const c = allCustomers.find(x => x.customerId === d.custId);
+          if (c) selectCustomerObj(c);
+          else if (d.custName) {
+            selectCustomerObj({ customerId: d.custId||'', customerName: d.custName,
+              contact: d.contact||'', city: d.city||'', rac: d.rac||'', company: d.company||'' });
+          }
+          if (d.ticketId) {
+            const el = document.getElementById('jo-ticketId');
+            if (el) el.value = d.ticketId;
+          }
+          if (d.assetId) {
+            setTimeout(() => {
+              const sel = document.getElementById('jo-asset-sel');
+              if (sel) { sel.value = d.assetId; onJOAssetChange(); }
+            }, 400);
+          }
+        }
+      } catch(e) {}
+    }
+  } catch(e) {}
 })();
+
+function populateJOAssets(custId) {
+  const sel = document.getElementById('jo-asset-sel');
+  if (!sel) return;
+  sel.innerHTML = '<option value="">— No asset (New Installation) —</option>';
+  const hint = document.getElementById('jo-asset-hint');
+  if (hint) hint.textContent = '';
+  if (!custId) return;
+  const custAssets = allAssets.filter(a => a.customerId === custId);
+  custAssets.forEach(a => {
+    const opt = document.createElement('option');
+    opt.value = a.assetId;
+    opt.textContent = (a.registrationNo || '?') + ' — ' + [a.make, a.model].filter(Boolean).join(' ');
+    sel.appendChild(opt);
+  });
+}
+
+function onJOAssetChange() {
+  const sel = document.getElementById('jo-asset-sel');
+  const assetId = sel ? sel.value : '';
+  const a = allAssets.find(x => x.assetId === assetId);
+  const hint = document.getElementById('jo-asset-hint');
+  if (!a) { if (hint) hint.textContent = ''; return; }
+
+  // Auto-fill vehicle fields in the form
+  const setByName = (name, val) => {
+    const el = document.querySelector('[name="' + name + '"]');
+    if (el && val) el.value = val;
+  };
+  setByName('vehicle',  a.registrationNo || '');
+  setByName('engine',   a.engineNo || '');
+  setByName('chassis',  a.chassisNo || '');
+  setByName('make',     a.make || '');
+  setByName('model',    a.model || '');
+  setByName('color',    a.color || '');
+  setByName('imei',     a.trackerIMEI || '');
+  setByName('gsm',      a.simNumber || '');
+
+  // Sync searchable inventory inputs
+  const imeiQ = document.getElementById('inv-imei-q');
+  const simQ  = document.getElementById('inv-sim-q');
+  if (imeiQ && a.trackerIMEI) {
+    imeiQ.value = a.trackerIMEI;
+    document.getElementById('imei-sel-imei').textContent = a.trackerIMEI;
+    document.getElementById('imei-sel-detail').textContent = 'Auto-filled from asset record';
+    document.getElementById('imei-sel-banner').style.display = 'block';
+  }
+  if (simQ && a.simNumber) {
+    simQ.value = a.simNumber;
+    document.getElementById('sim-sel-num').textContent = a.simNumber;
+    document.getElementById('sim-sel-detail').textContent = 'Auto-filled from asset record';
+    document.getElementById('sim-sel-banner').style.display = 'block';
+  }
+
+  // Also fill customer step auto-fill fields
+  const setById = (id, val) => { const el = document.getElementById(id); if (el && val) el.value = val; };
+  setById('f-vehicle', a.registrationNo || '');
+
+  // Set assetId hidden field
+  const assetIdField = document.getElementById('jo-assetId');
+  if (assetIdField) assetIdField.value = a.assetId || '';
+
+  if (hint) hint.textContent = '✓ Auto-filled: '
+    + [a.make, a.model, a.color].filter(Boolean).join(' ')
+    + ' · AMC: ' + (a.amcExpiry || '—');
+}
+
+function selectCustomerObj(c) {
+  selectedCustomer = c;
+  selectedCust = c;
+  document.getElementById('sb-name').textContent = c.customerName + (c.company ? ' — ' + c.company : '');
+  document.getElementById('sb-meta').textContent = [c.contact, c.city, c.rac ? 'RAC: '+c.rac : ''].filter(Boolean).join(' · ');
+  document.getElementById('sb-id').textContent   = c.customerId || 'No ID';
+  document.getElementById('selBanner').classList.add('on');
+  // Also fill Step 1 fields
+  const setByName = (name, val) => { const el = document.querySelector('[name="' + name + '"]'); if (el && val) el.value = val; };
+  setByName('customer',  c.customerName || '');
+  setByName('contact',   c.contact || '');
+  setByName('rac',       c.rac || '');
+  setByName('reference', c.company || '');
+  setByName('city',      c.city || '');
+  // Step 8 credentials
+  const setById = (id, val) => { const el = document.getElementById(id); if (el && val) el.value = val; };
+  setById('f-customer', c.customerName || '');
+  setById('f-contact',  c.contact || '');
+  setById('f-rac',      c.rac || '');
+  setById('f-reference',c.company || '');
+  setById('f-city',     c.city || '');
+  // Populate asset dropdown
+  populateJOAssets(c.customerId);
+}
 
 function searchCustomers(q) {
   const dd = document.getElementById('custDD');
@@ -118,6 +248,134 @@ function selectTOC(val, el) {
   document.querySelectorAll('.toc-btn').forEach(b=>b.classList.remove('selected'));
   el.classList.add('selected');
   document.getElementById('tocHidden').value = val;
+}
+
+
+// ══════════════════════════════════════
+//  INVENTORY — IMEI & SIM LIVE SEARCH
+// ══════════════════════════════════════
+
+function closeInvDD(id) {
+  const dd = document.getElementById(id);
+  if (dd) dd.style.display = 'none';
+}
+
+function ddRow(icon, main, sub, warn) {
+  const bg  = 'rgba(56,217,245,0.05)';
+  const col = warn ? 'var(--warn)' : 'var(--muted)';
+  return '<div style="padding:10px 14px;cursor:pointer;border-bottom:1px solid var(--border);'
+    + 'display:flex;align-items:center;gap:10px;transition:background 0.12s"'
+    + ' onmouseover="this.style.background=\'' + bg + '\'"'
+    + ' onmouseout="this.style.background=\'\'">'
+    + '<div style="font-size:18px;flex-shrink:0">' + icon + '</div>'
+    + '<div>'
+    + '<div style="font-size:12px;font-family:var(--mono);color:var(--text);font-weight:600">' + main + '</div>'
+    + '<div style="font-size:10px;color:' + col + ';margin-top:2px">' + sub + '</div>'
+    + '</div></div>';
+}
+
+function searchIMEI(q) {
+  const dd = document.getElementById('imei-dd');
+  q = (q || '').toLowerCase().trim();
+  if (q.length < 2) { dd.style.display = 'none'; return; }
+
+  // Filter available trackers
+  const hits = allTrackers.filter(t =>
+    (t.status || '').toLowerCase() === 'available' &&
+    ((t.imei || '').toLowerCase().includes(q) || (t.model || '').toLowerCase().includes(q) ||
+     (t.supplier || '').toLowerCase().includes(q))
+  ).slice(0, 10);
+
+  if (!hits.length) {
+    dd.innerHTML = '<div style="padding:12px 14px;font-size:11px;color:var(--muted);text-align:center">'
+      + (allTrackers.length === 0 ? '⚠ Inventory not loaded — check connection' : 'No available trackers matching "' + q + '"') + '</div>';
+    dd.style.display = 'block'; return;
+  }
+
+  dd.innerHTML = hits.map((t, i) => {
+    const sub = [t.model, t.supplier, 'Qty: ' + (t.qty || 1), t.price ? 'PKR ' + t.price : ''].filter(Boolean).join(' · ');
+    const row = ddRow('📡', t.imei || '—', sub, false);
+    return row.replace('<div style="padding', '<div onclick="pickIMEI(' + i + ')" style="padding');
+  }).join('');
+  dd._hits = hits;
+  dd.style.display = 'block';
+}
+
+function pickIMEI(i) {
+  const dd = document.getElementById('imei-dd');
+  const t = (dd._hits || allTrackers)[i];
+  if (!t) return;
+
+  // Set the input value (used by FormData on submit)
+  document.getElementById('inv-imei-q').value = t.imei || '';
+
+  // Auto-fill serial and module if available
+  const serial = document.getElementById('dev-serial');
+  const module = document.getElementById('dev-module');
+  if (serial && t.model) serial.value = t.model; // model as serial hint
+  if (module && t.model) module.value = t.model;
+
+  // Show selection banner
+  document.getElementById('imei-sel-imei').textContent = t.imei || '—';
+  document.getElementById('imei-sel-detail').textContent =
+    [t.model, t.supplier, t.price ? 'PKR ' + t.price : '', 'Status: ' + (t.status || '—')].filter(Boolean).join(' · ');
+  document.getElementById('imei-sel-banner').style.display = 'block';
+  dd.style.display = 'none';
+}
+
+function clearIMEISel() {
+  document.getElementById('inv-imei-q').value = '';
+  document.getElementById('imei-sel-banner').style.display = 'none';
+  document.getElementById('dev-serial').value = '';
+  document.getElementById('dev-module').value = '';
+}
+
+function searchSIM(q) {
+  const dd = document.getElementById('sim-dd');
+  q = (q || '').toLowerCase().trim();
+  if (q.length < 2) { dd.style.display = 'none'; return; }
+
+  // Filter available SIMs
+  const hits = allSIMs.filter(s =>
+    (s.status || '').toLowerCase() === 'available' &&
+    ((s.simNumber || '').toLowerCase().includes(q) || (s.network || '').toLowerCase().includes(q) ||
+     (s.iccid || '').toLowerCase().includes(q) || (s.plan || '').toLowerCase().includes(q))
+  ).slice(0, 10);
+
+  if (!hits.length) {
+    dd.innerHTML = '<div style="padding:12px 14px;font-size:11px;color:var(--muted);text-align:center">'
+      + (allSIMs.length === 0 ? '⚠ Inventory not loaded — check connection' : 'No available SIMs matching "' + q + '"') + '</div>';
+    dd.style.display = 'block'; return;
+  }
+
+  dd.innerHTML = hits.map((s, i) => {
+    const sub = [s.network, s.plan, s.iccid ? 'ICCID: ' + s.iccid : '', 'Qty: ' + (s.qty || 1)].filter(Boolean).join(' · ');
+    const row = ddRow('📶', s.simNumber || '—', sub, false);
+    return row.replace('<div style="padding', '<div onclick="pickSIM(' + i + ')" style="padding');
+  }).join('');
+  dd._hits = hits;
+  dd.style.display = 'block';
+}
+
+function pickSIM(i) {
+  const dd = document.getElementById('sim-dd');
+  const s = (dd._hits || allSIMs)[i];
+  if (!s) return;
+
+  // Set the input value (used by FormData on submit as field "gsm")
+  document.getElementById('inv-sim-q').value = s.simNumber || '';
+
+  // Show selection banner
+  document.getElementById('sim-sel-num').textContent = s.simNumber || '—';
+  document.getElementById('sim-sel-detail').textContent =
+    [s.network, s.plan, s.iccid ? 'ICCID: ' + s.iccid : '', 'Status: ' + (s.status || '—')].filter(Boolean).join(' · ');
+  document.getElementById('sim-sel-banner').style.display = 'block';
+  dd.style.display = 'none';
+}
+
+function clearSIMSel() {
+  document.getElementById('inv-sim-q').value = '';
+  document.getElementById('sim-sel-banner').style.display = 'none';
 }
 
 let lastSubmittedData = {};

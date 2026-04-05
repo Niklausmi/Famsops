@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sales Leads — FleetCRM</title>
+<script src="crm-core.js"></script>
+<script>document.head.insertAdjacentHTML('beforeend', CRM_STYLE);</script>
+<style>
+body{display:block!important;padding:0!important}body::after{display:none}
+
+/* Funnel stats */
+.funnel{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;margin-bottom:22px}
+.funnel-tile{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 10px;text-align:center;cursor:pointer;transition:all 0.18s;position:relative;overflow:hidden}
+.funnel-tile:hover{transform:translateY(-1px);box-shadow:0 4px 20px rgba(0,0,0,0.3)}
+.funnel-tile.active{border-color:var(--accent);background:rgba(56,217,245,0.06)}
+.funnel-tile::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+.ft-all::before   {background:linear-gradient(90deg,var(--accent),transparent)}
+.ft-new::before   {background:linear-gradient(90deg,var(--accent),transparent)}
+.ft-cont::before  {background:linear-gradient(90deg,var(--accent2),transparent)}
+.ft-int::before   {background:linear-gradient(90deg,var(--warn),transparent)}
+.ft-neg::before   {background:linear-gradient(90deg,var(--accent3),transparent)}
+.ft-won::before   {background:linear-gradient(90deg,var(--success),transparent)}
+.ft-lost::before  {background:linear-gradient(90deg,var(--muted),transparent)}
+.ft-num{font-family:var(--display);font-size:22px;font-weight:800;line-height:1;margin-bottom:4px}
+.ft-lbl{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted)}
+
+/* Filters */
+.fi-f{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--mono);font-size:11px;padding:8px 10px;outline:none;transition:border-color 0.2s;appearance:none}
+.fi-f:focus{border-color:rgba(56,217,245,0.4)}.fi-f::placeholder{color:var(--muted)}
+.fi-fs{cursor:pointer;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath fill='%235a6070' d='M5 6L0 0h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:26px}
+.fi-fs option{background:#1a1e26}
+.fp{background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:14px 18px;margin-bottom:14px}
+
+/* Status badges */
+.sb{display:inline-block;font-size:9px;padding:2px 9px;border-radius:4px;text-transform:uppercase;letter-spacing:0.5px;font-weight:500;white-space:nowrap}
+.sb-new     {background:rgba(56,217,245,0.1); color:var(--accent)}
+.sb-contacted{background:rgba(123,111,255,0.1);color:var(--accent2)}
+.sb-interested{background:rgba(255,179,71,0.1); color:var(--warn)}
+.sb-negotiation{background:rgba(255,126,179,0.1);color:var(--accent3)}
+.sb-won     {background:rgba(61,255,160,0.1);  color:var(--success)}
+.sb-lost    {background:rgba(90,96,112,0.15);  color:var(--muted)}
+.sb-cancelled{background:rgba(90,96,112,0.15); color:var(--muted)}
+
+/* Table expand */
+.lead-row{cursor:pointer;transition:background 0.12s}
+.lead-row:hover{background:rgba(255,255,255,0.02)!important}
+.lead-det{display:none;background:var(--surface2);border-bottom:1px solid var(--border)}
+.lead-det.open{display:table-row}
+.det-g{display:grid;grid-template-columns:repeat(4,1fr);gap:0;border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:12px}
+.dg{padding:9px 12px;border-right:1px solid var(--border);border-bottom:1px solid var(--border)}
+.dg:nth-child(4n){border-right:none}.dg:nth-last-child(-n+4){border-bottom:none}
+.dg-l{font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:3px}
+.dg-v{font-size:12px;color:var(--text);word-break:break-word}
+
+/* Pagination */
+.pg-bar{display:flex;align-items:center;justify-content:space-between;margin-top:14px;flex-wrap:wrap;gap:10px}
+.pg-btns{display:flex;gap:5px;flex-wrap:wrap}
+.pgb{padding:5px 10px;border-radius:6px;background:var(--surface2);border:1px solid var(--border);color:var(--muted);font-family:var(--mono);font-size:11px;cursor:pointer;transition:all 0.15s}
+.pgb.act{background:rgba(56,217,245,0.1);border-color:rgba(56,217,245,0.3);color:var(--accent)}
+.pgb:hover:not(:disabled){color:var(--text);border-color:var(--border-hi)}.pgb:disabled{opacity:0.3;cursor:not-allowed}
+
+@media(max-width:1000px){.funnel{grid-template-columns:repeat(4,1fr)}}
+@media(max-width:600px){.funnel{grid-template-columns:1fr 1fr 1fr}.det-g{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+<script>const _gu = crmGuard('leads');</script>
+
+<div class="crm-main">
+  <div class="crm-topbar">
+    <div>
+      <div class="page-title">Sales Leads</div>
+      <div class="page-subtitle">All leads — created through tickets · Click row to expand · Edit to update status and payment</div>
+    </div>
+    <div class="topbar-right">
+      <div class="topbar-time" id="clock"></div>
+      <a href="tickets.html" class="btn btn-primary btn-sm" style="font-size:11px">＋ New Lead via Ticket</a>
+    </div>
+  </div>
+
+  <div class="crm-content fade-up">
+
+    <!-- Funnel tiles — clickable status filter -->
+    <div class="funnel">
+      <div class="funnel-tile ft-all active" onclick="filterByStatus('',this)">
+        <div class="ft-num" id="fn-all">—</div><div class="ft-lbl">All Leads</div>
+      </div>
+      <div class="funnel-tile ft-new" onclick="filterByStatus('New Lead',this)">
+        <div class="ft-num" id="fn-new">—</div><div class="ft-lbl">New</div>
+      </div>
+      <div class="funnel-tile ft-cont" onclick="filterByStatus('Contacted',this)">
+        <div class="ft-num" id="fn-cont">—</div><div class="ft-lbl">Contacted</div>
+      </div>
+      <div class="funnel-tile ft-int" onclick="filterByStatus('Interested',this)">
+        <div class="ft-num" id="fn-int">—</div><div class="ft-lbl">Interested</div>
+      </div>
+      <div class="funnel-tile ft-neg" onclick="filterByStatus('Negotiation',this)">
+        <div class="ft-num" id="fn-neg">—</div><div class="ft-lbl">Negotiation</div>
+      </div>
+      <div class="funnel-tile ft-won" onclick="filterByStatus('Won',this)">
+        <div class="ft-num" id="fn-won">—</div><div class="ft-lbl">Won</div>
+      </div>
+      <div class="funnel-tile ft-lost" onclick="filterByStatus('Lost',this)">
+        <div class="ft-num" id="fn-lost">—</div><div class="ft-lbl">Lost</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="section-head">
+        <div class="section-icon si-green">🎯</div>
+        <div><h2>All Sales Leads</h2><p>Click row to expand · Edit to update status, payment and install</p></div>
+      </div>
+
+      <!-- Filters -->
+      <div class="fp">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+          <span style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--accent)">⚙ Filters</span>
+          <div style="display:flex;gap:8px">
+            <span id="ld-fc" style="font-size:10px;color:var(--muted)"></span>
+            <button class="btn btn-ghost btn-sm" onclick="clearLdFilters()">Clear</button>
+            <button class="btn btn-ghost btn-sm" onclick="loadLeads()">↻ Refresh</button>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:10px;margin-bottom:10px">
+          <input class="fi-f" id="lf-q" placeholder="Search customer, package, city, sales person, lead ID…" oninput="applyLdFilters()">
+          <select class="fi-f fi-fs" id="lf-status" onchange="applyLdFilters()">
+            <option value="">All Status</option><option>New Lead</option><option>Contacted</option>
+            <option>Interested</option><option>Negotiation</option><option>Won</option><option>Lost</option>
+          </select>
+          <select class="fi-f fi-fs" id="lf-install" onchange="applyLdFilters()">
+            <option value="">All Install Status</option><option>Not Assigned</option><option>Assigned</option>
+            <option>Scheduled</option><option>In Progress</option><option>Completed</option><option>On Hold</option>
+          </select>
+          <input class="fi-f" id="lf-sales" placeholder="Sales person…" oninput="applyLdFilters()">
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px">
+          <input class="fi-f" id="lf-city" placeholder="City…" oninput="applyLdFilters()">
+          <select class="fi-f fi-fs" id="lf-source" onchange="applyLdFilters()">
+            <option value="">All Sources</option><option>Referral</option><option>Walk-in</option><option>WhatsApp</option>
+            <option>Social Media</option><option>Cold Call</option><option>Website</option><option>Exhibition / Event</option><option>Existing Client</option>
+          </select>
+          <input type="date" class="fi-f" id="lf-from" onchange="applyLdFilters()">
+          <input type="date" class="fi-f" id="lf-to"   onchange="applyLdFilters()">
+        </div>
+      </div>
+
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px">
+        <span id="ld-res" style="font-size:11px;color:var(--muted)">—</span>
+        <div style="display:flex;align-items:center;gap:8px;font-size:10px;color:var(--muted)">Per page:
+          <select id="ld-pp" onchange="ldChangePP()" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:var(--mono);font-size:11px;padding:5px 10px;outline:none;cursor:pointer">
+            <option value="10">10</option><option value="25" selected>25</option><option value="50">50</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table><thead><tr>
+          <th onclick="sortLd('dateForwarded')" style="cursor:pointer">Date <span id="ls-date">↓</span></th>
+          <th>Lead ID</th>
+          <th onclick="sortLd('customerName')" style="cursor:pointer">Customer <span id="ls-cust"></span></th>
+          <th>Package</th>
+          <th>Vehicles</th>
+          <th>Sales Person</th>
+          <th>Follow-up</th>
+          <th>Status</th>
+          <th>Install</th>
+          <th>Actions</th>
+        </tr></thead>
+        <tbody id="ld-tbody">
+          <tr><td colspan="10" style="text-align:center;padding:40px;color:var(--muted)">Loading leads…</td></tr>
+        </tbody></table>
+      </div>
+
+      <div class="pg-bar">
+        <div class="pg-btns" id="ld-pgs"></div>
+        <div style="display:flex;align-items:center;gap:6px;font-size:10px;color:var(--muted)">Go to:
+          <input type="number" id="ld-pg-inp" min="1" style="width:48px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:var(--mono);font-size:11px;padding:5px 8px;outline:none;text-align:center" onkeydown="if(event.key==='Enter')ldJumpPg()">
+          <button class="btn btn-ghost btn-sm" onclick="ldJumpPg()">Go</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+crmNav('leads');
+startClock(document.getElementById('clock'));
+
+let allLeads = [], filteredLeads = [], ldPage = 1, ldPP = 25;
+let ldSortKey = 'dateForwarded', ldSortDir = 'desc';
+let activeFunnelStatus = '';
+
+// ── Load ──────────────────────────────────────────────
+async function loadLeads() {
+  const tb = document.getElementById('ld-tbody');
+  tb.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:40px;color:var(--muted)">Loading…</td></tr>';
+  try {
+    const res = await crmGet({ action: 'getLeads' });
+    allLeads = res.data || [];
+    updateFunnel(allLeads);
+    applyLdFilters();
+  } catch(err) {
+    tb.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:30px;color:var(--danger)">⚠ ' + esc(err.message || 'Load failed') + '</td></tr>';
+  }
+}
+
+function updateFunnel(data) {
+  const count = s => data.filter(l => l.status === s).length;
+  document.getElementById('fn-all').textContent  = data.length;
+  document.getElementById('fn-new').textContent  = count('New Lead');
+  document.getElementById('fn-cont').textContent = count('Contacted');
+  document.getElementById('fn-int').textContent  = count('Interested');
+  document.getElementById('fn-neg').textContent  = count('Negotiation');
+  document.getElementById('fn-won').textContent  = count('Won');
+  document.getElementById('fn-lost').textContent = count('Lost');
+}
+
+function filterByStatus(status, tile) {
+  document.querySelectorAll('.funnel-tile').forEach(t => t.classList.remove('active'));
+  tile.classList.add('active');
+  activeFunnelStatus = status;
+  document.getElementById('lf-status').value = status;
+  applyLdFilters();
+}
+
+// ── Filter ────────────────────────────────────────────
+function applyLdFilters() {
+  const q      = (document.getElementById('lf-q').value      || '').toLowerCase().trim();
+  const status = document.getElementById('lf-status').value;
+  const inst   = document.getElementById('lf-install').value;
+  const sales  = (document.getElementById('lf-sales').value  || '').toLowerCase().trim();
+  const city   = (document.getElementById('lf-city').value   || '').toLowerCase().trim();
+  const source = document.getElementById('lf-source').value;
+  const from   = document.getElementById('lf-from').value;
+  const to     = document.getElementById('lf-to').value;
+
+  filteredLeads = allLeads.filter(l => {
+    const mq = !q || [l.leadId, l.customerName, l.package, l.city, l.salesPerson, l.source, l.rac, l.company, l.contact]
+      .some(v => (v || '').toLowerCase().includes(q));
+    const ms   = !status || l.status === status;
+    const mi   = !inst   || l.installStatus === inst;
+    const msp  = !sales  || (l.salesPerson || '').toLowerCase().includes(sales);
+    const mc   = !city   || (l.city || '').toLowerCase().includes(city);
+    const msrc = !source || l.source === source;
+    const d    = (l.dateForwarded || '').substring(0, 10);
+    return mq && ms && mi && msp && mc && msrc && (!from || d >= from) && (!to || d <= to);
+  });
+
+  filteredLeads.sort((a, b) => {
+    const av = a[ldSortKey] || '', bv = b[ldSortKey] || '';
+    return ldSortDir === 'asc' ? av.localeCompare(bv) : bv.localeCompare(av);
+  });
+
+  const ac = [q,status,inst,sales,city,source,from,to].filter(Boolean).length;
+  const fc = document.getElementById('ld-fc');
+  if (fc) fc.textContent = ac ? ac + ' filter' + (ac > 1 ? 's' : '') + ' active' : '';
+  ldPage = 1;
+  renderLdPage();
+}
+
+function clearLdFilters() {
+  ['lf-q','lf-status','lf-install','lf-sales','lf-city','lf-source','lf-from','lf-to'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.value = '';
+  });
+  activeFunnelStatus = '';
+  document.querySelectorAll('.funnel-tile').forEach(t => t.classList.remove('active'));
+  document.querySelector('.ft-all').classList.add('active');
+  applyLdFilters();
+}
+
+function sortLd(key) {
+  if (ldSortKey === key) ldSortDir = ldSortDir === 'asc' ? 'desc' : 'asc';
+  else { ldSortKey = key; ldSortDir = 'desc'; }
+  ['ls-date','ls-cust'].forEach(id => { const e = document.getElementById(id); if (e) e.textContent = ''; });
+  const map = { dateForwarded: 'ls-date', customerName: 'ls-cust' };
+  const el = document.getElementById(map[key]);
+  if (el) el.textContent = ldSortDir === 'asc' ? ' ↑' : ' ↓';
+  applyLdFilters();
+}
+
+// ── Render ────────────────────────────────────────────
+function sbCls(s) {
+  const map = { 'New Lead':'new','Contacted':'contacted','Interested':'interested',
+                'Negotiation':'negotiation','Won':'won','Lost':'lost','Cancelled':'cancelled' };
+  return 'sb sb-' + (map[s] || 'new');
+}
+function instCls(s) {
+  const m = { 'Not Assigned':'var(--muted2)','Assigned':'var(--accent2)','Scheduled':'var(--accent)',
+              'In Progress':'var(--warn)','Completed':'var(--success)','On Hold':'var(--accent3)' };
+  return m[s] || 'var(--muted)';
+}
+
+function renderLdPage() {
+  const tb    = document.getElementById('ld-tbody');
+  const total = filteredLeads.length;
+  const pages = Math.max(1, Math.ceil(total / ldPP));
+  ldPage = Math.min(ldPage, pages);
+  const start = (ldPage - 1) * ldPP;
+  const slice = filteredLeads.slice(start, start + ldPP);
+
+  const ri = document.getElementById('ld-res');
+  if (ri) ri.textContent = total === 0 ? 'No leads found' :
+    'Showing ' + (start+1) + '–' + Math.min(start+ldPP, total) + ' of ' + total + ' leads';
+
+  if (!slice.length) {
+    tb.innerHTML = '<tr><td colspan="10"><div class="empty-state"><div class="ei">🎯</div><p>No leads match your filters</p></div></td></tr>';
+    renderLdPgs(0,1); return;
+  }
+
+  tb.innerHTML = slice.map(l => {
+    const gi = allLeads.indexOf(l);
+    const fu = l.followUpDate && new Date(l.followUpDate) < new Date() && !['Won','Lost','Cancelled'].includes(l.status)
+      ? '<span style="color:var(--danger)">' + esc(l.followUpDate) + ' ⚠</span>' : esc(l.followUpDate || '—');
+    return '<tr class="lead-row" id="lrow-' + gi + '" onclick="toggleLdRow(' + gi + ',this)">'
+      + '<td class="td-muted">' + esc((l.dateForwarded||'—').substring(0,10)) + '</td>'
+      + '<td style="font-family:var(--mono);font-size:10px;color:var(--accent)">' + esc(l.leadId||'—') + '</td>'
+      + '<td><strong>' + esc(l.customerName||'—') + '</strong>'
+      + (l.city ? '<div style="font-size:10px;color:var(--muted)">' + esc(l.city) + '</div>' : '') + '</td>'
+      + '<td style="font-size:11px">' + esc(l.package||'—') + '</td>'
+      + '<td class="td-muted" style="text-align:center">' + esc(l.vehicles||'—') + '</td>'
+      + '<td class="td-muted">' + esc(l.salesPerson||'—') + '</td>'
+      + '<td>' + fu + '</td>'
+      + '<td><span class="' + sbCls(l.status) + '">' + esc(l.status||'New Lead') + '</span></td>'
+      + '<td><span style="font-size:10px;color:' + instCls(l.installStatus) + '">' + esc(l.installStatus||'—') + '</span></td>'
+      + '<td onclick="event.stopPropagation()" style="white-space:nowrap">'
+      + '<button class="btn btn-ghost btn-sm" onclick="openLdEdit(' + gi + ')" style="font-size:10px;padding:4px 10px">Edit</button>'
+      + '</td></tr>'
+      + '<tr class="lead-det" id="ldet-' + gi + '"><td colspan="10"><div style="padding:16px 20px" id="ldinner-' + gi + '"></div></td></tr>';
+  }).join('');
+
+  renderLdPgs(total, pages);
+}
+
+function toggleLdRow(gi, row) {
+  const det   = document.getElementById('ldet-' + gi);
+  const inner = document.getElementById('ldinner-' + gi);
+  if (det.classList.contains('open')) { det.classList.remove('open'); row.classList.remove('expanded'); return; }
+  document.querySelectorAll('.lead-det.open').forEach(d => d.classList.remove('open'));
+  document.querySelectorAll('.lead-row.expanded').forEach(r => r.classList.remove('expanded'));
+  row.classList.add('expanded'); det.classList.add('open');
+
+  const l = allLeads[gi];
+  const f = (lbl, v) => v ? '<div class="dg"><div class="dg-l">' + lbl + '</div><div class="dg-v">' + esc(v) + '</div></div>' : '';
+  inner.innerHTML = '<div class="det-g">'
+    + f('Lead ID', l.leadId) + f('Ticket Ref', l.ticketId) + f('Date', l.dateForwarded) + f('Status', l.status)
+    + f('Customer', l.customerName) + f('Contact', l.contact) + f('City', l.city) + f('RAC', l.rac)
+    + f('Package', l.package) + f('Vehicles', l.vehicles) + f('Budget', l.budget) + f('Timeline', l.purchaseTimeline)
+    + f('Payment Pref.', l.preferredPayment) + f('Source', l.source) + f('Sales Person', l.salesPerson) + f('Follow-up', l.followUpDate)
+    + f('Install Status', l.installStatus) + f('Payment Status', l.paymentStatus) + f('Amount Received', l.amountReceived ? 'PKR ' + l.amountReceived : '') + f('Total Amount', l.totalAmount ? 'PKR ' + l.totalAmount : '')
+    + f('Payment Mode', l.paymentMode) + f('Payment Date', l.paymentDate) + f('Lost Reason', l.lostReason) + f('Lost Date', l.lostDate)
+    + '</div>'
+    + (l.notes ? '<div style="background:var(--surface2);border-radius:8px;padding:10px 12px;margin-bottom:8px"><div class="dg-l" style="margin-bottom:4px">Notes</div><div style="font-size:12px;color:var(--muted)">' + esc(l.notes) + '</div></div>' : '')
+    + '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px">'
+    + '<button class="btn btn-primary btn-sm" onclick="openLdEdit(' + gi + ')">✏ Update Status</button>'
+    + (l.ticketId ? '<a class="btn btn-ghost btn-sm" href="tickets.html">🎫 View Ticket</a>' : '')
+    + '</div>';
+}
+
+// ── Edit Modal ─────────────────────────────────────────
+let editingLdIdx = -1;
+function openLdEdit(gi) {
+  editingLdIdx = gi;
+  const l = allLeads[gi]; if (!l) return;
+  const old = document.getElementById('ldEditModal'); if (old) old.remove();
+
+  const statuses  = ['New Lead','Contacted','Interested','Negotiation','Won','Lost'];
+  const instSts   = ['Not Assigned','Assigned','Scheduled','In Progress','Completed','On Hold'];
+  const paySts    = ['Pending','Partial','Paid'];
+  const payModes  = ['Cash','Bank Transfer','Cheque','Online / Mobile'];
+
+  const fi = (id, lbl, val) =>
+    '<div class="field"><label>' + lbl + '</label>'
+    + '<input id="le-' + id + '" value="' + esc(val||'') + '" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--mono);font-size:12px;padding:9px 13px;outline:none"></div>';
+  const fsel = (id, lbl, val, opts) =>
+    '<div class="field"><label>' + lbl + '</label>'
+    + '<select id="le-' + id + '" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--mono);font-size:12px;padding:9px 13px;outline:none;appearance:none;cursor:pointer">'
+    + opts.map(o => '<option' + (val===o?' selected':'') + '>' + o + '</option>').join('')
+    + '</select></div>';
+  const g2 = inner => '<div style="display:grid;grid-template-columns:1fr 1fr;gap:0 14px">' + inner + '</div>';
+
+  const isWon  = l.status === 'Won';
+  const isLost = l.status === 'Lost';
+
+  const modal = document.createElement('div');
+  modal.id = 'ldEditModal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.82);z-index:500;display:flex;align-items:flex-start;justify-content:center;padding:24px;overflow-y:auto';
+  modal.innerHTML = '<div style="width:100%;max-width:600px;margin:auto;background:var(--surface);border:1px solid var(--border-hi);border-radius:14px;overflow:hidden">'
+    + '<div style="padding:18px 22px;border-bottom:1px solid var(--border);background:var(--surface2);display:flex;align-items:center;justify-content:space-between">'
+    + '<div><div style="font-family:var(--display);font-size:14px;font-weight:700">Update Lead — ' + esc(l.leadId||'') + '</div>'
+    + '<div style="font-size:11px;color:var(--muted);margin-top:2px">' + esc(l.customerName||'') + ' · ' + esc(l.package||'') + '</div></div>'
+    + '<button onclick="document.getElementById(\'ldEditModal\').remove()" style="background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer">✕</button>'
+    + '</div>'
+    + '<div style="padding:20px 22px;max-height:80vh;overflow-y:auto">'
+
+    + '<div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--accent);margin-bottom:12px">Lead Status</div>'
+    + g2(fsel('status', 'Lead Status', l.status||'New Lead', statuses)
+      + fsel('install', 'Install Status', l.installStatus||'Not Assigned', instSts))
+    + fi('salesperson', 'Sales Person', l.salesPerson)
+    + fi('followup', 'Follow-up Date', l.followUpDate)
+
+    + '<div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--accent2);margin:14px 0 12px">Payment Details <span style="font-size:9px;color:var(--muted);text-transform:none;letter-spacing:0">(fill when Won)</span></div>'
+    + g2(fsel('paystatus','Payment Status', l.paymentStatus||'Pending', paySts)
+      + fsel('paymode',  'Payment Mode',    l.paymentMode||'', [''].concat(payModes)))
+    + g2(fi('received','Amount Received (PKR)',l.amountReceived)
+      + fi('total',   'Total Amount (PKR)',   l.totalAmount))
+    + fi('paydate', 'Payment Date', l.paymentDate)
+
+    + '<div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--danger);margin:14px 0 12px">If Lost</div>'
+    + '<div class="field"><label>Lost Reason</label>'
+    + '<input id="le-lostReason" value="' + esc(l.lostReason||'') + '" placeholder="Why was this lead lost?" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--mono);font-size:12px;padding:9px 13px;outline:none"></div>'
+    + fi('lostDate','Lost Date', l.lostDate)
+
+    + '<div class="field" style="margin-top:6px"><label>Notes</label>'
+    + '<textarea id="le-notes" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--mono);font-size:12px;padding:9px 13px;outline:none;height:60px;resize:none">' + esc(l.notes||'') + '</textarea></div>'
+
+    + '<div class="error-banner" id="le-err"></div>'
+    + '<div style="display:flex;gap:10px;margin-top:16px">'
+    + '<button class="btn btn-solid" onclick="saveLdEdit()">Save Changes</button>'
+    + '<button class="btn btn-ghost" onclick="document.getElementById(\'ldEditModal\').remove()">Cancel</button>'
+    + '</div></div></div>';
+  document.body.appendChild(modal);
+  modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
+}
+
+async function saveLdEdit() {
+  const l = allLeads[editingLdIdx]; if (!l) return;
+  const errEl = document.getElementById('le-err');
+  errEl.style.display = 'none';
+  const g = id => { const el = document.getElementById('le-' + id); return el ? el.value.trim() : ''; };
+
+  const updates = {
+    status:        g('status'),
+    installStatus: g('install'),
+    salesPerson:   g('salesperson'),
+    followUpDate:  g('followup'),
+    paymentStatus: g('paystatus'),
+    paymentMode:   g('paymode'),
+    amountReceived:g('received'),
+    totalAmount:   g('total'),
+    paymentDate:   g('paydate'),
+    lostReason:    g('lostReason'),
+    lostDate:      g('lostDate'),
+    notes:         g('notes'),
+  };
+  if (updates.status === 'Lost' && !updates.lostDate) {
+    updates.lostDate = new Date().toISOString().split('T')[0];
+  }
+
+  try {
+    const res = await crmPost({
+      action: 'updateField', sheetTab: 'Sales Leads',
+      keyField: 'leadId', keyValue: l.leadId, updates,
+    });
+    if (res.status === 'error') throw new Error(res.message);
+    Object.assign(allLeads[editingLdIdx], updates);
+    document.getElementById('ldEditModal').remove();
+    updateFunnel(allLeads);
+    applyLdFilters();
+    showToast('✓ Lead updated — ' + l.leadId);
+  } catch(err) {
+    errEl.textContent = '⚠ ' + (err.message || 'Save failed');
+    errEl.style.display = 'block';
+  }
+}
+
+// ── Pagination ─────────────────────────────────────────
+function renderLdPgs(total, pages) {
+  const bar = document.getElementById('ld-pgs'); if (!bar) return;
+  if (!total) { bar.innerHTML = ''; return; }
+  const b = (l, p, d, a) => '<button class="pgb' + (a?' act':'') + '" onclick="ldGo(' + p + ')" ' + (d?'disabled':'') + '>' + l + '</button>';
+  let h = b('‹', ldPage-1, ldPage===1, false);
+  const s = Math.max(1,ldPage-2), e = Math.min(pages,ldPage+2);
+  if(s>1){h+=b('1',1,false,false);if(s>2)h+='<span style="color:var(--muted);padding:0 3px">…</span>';}
+  for(let p=s;p<=e;p++) h+=b(p,p,false,p===ldPage);
+  if(e<pages){if(e<pages-1)h+='<span style="color:var(--muted);padding:0 3px">…</span>';h+=b(pages,pages,false,false);}
+  h+=b('›',ldPage+1,ldPage===pages,false);
+  bar.innerHTML=h;
+  const ji=document.getElementById('ld-pg-inp');if(ji){ji.value=ldPage;ji.max=pages;}
+}
+function ldGo(p) { ldPage=p; renderLdPage(); window.scrollTo({top:0,behavior:'smooth'}); }
+function ldJumpPg() { const p=parseInt(document.getElementById('ld-pg-inp').value),pg=Math.ceil(filteredLeads.length/ldPP);if(p>=1&&p<=pg)ldGo(p); }
+function ldChangePP() { ldPP=parseInt(document.getElementById('ld-pp').value);ldPage=1;renderLdPage(); }
+
+// ── Utils ──────────────────────────────────────────────
+function showToast(msg) {
+  const t = document.createElement('div');
+  t.style.cssText = 'position:fixed;bottom:24px;right:24px;background:rgba(61,255,160,0.12);border:1px solid rgba(61,255,160,0.35);border-radius:10px;padding:14px 20px;color:var(--success);font-size:12px;font-family:var(--mono);z-index:9999;max-width:380px';
+  t.textContent = msg; document.body.appendChild(t); setTimeout(()=>t.remove(),3500);
+}
+function esc(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// Auto-load
+loadLeads();
+</script>
+</body>
+</html>

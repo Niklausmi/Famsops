@@ -148,6 +148,25 @@ body{display:block!important;padding:0!important}body::after{display:none}
         </div>
       </div>
 
+      <!-- Asset cascade (only visible when customer is selected) -->
+      <div class="card" style="margin-bottom:16px" id="jo-asset-card">
+        <div class="section-head">
+          <div class="section-icon si-warn">🚗</div>
+          <div><h2>Linked Asset</h2><p>Select an existing vehicle to auto-fill Step 1 and Step 4 fields. Leave blank for a New Installation.</p></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr auto;gap:10px;align-items:flex-end">
+          <div class="field" style="margin-bottom:0">
+            <label>Vehicle Asset (Customer → Asset cascade)</label>
+            <select id="jo-asset-sel" onchange="onJOAssetChange()" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--mono);font-size:12px;padding:9px 13px;outline:none;appearance:none;cursor:pointer">
+              <option value="">— New Installation (no existing asset) —</option>
+            </select>
+          </div>
+          <button class="btn btn-ghost btn-sm" onclick="onJOAssetChange()" style="margin-bottom:0;white-space:nowrap">Apply ↓</button>
+        </div>
+        <div style="font-size:10px;color:var(--success);margin-top:6px" id="jo-asset-hint"></div>
+        <div style="font-size:10px;color:var(--muted);margin-top:4px">Selecting an asset auto-fills registration, engine, chassis, IMEI and SIM in the form steps below.</div>
+      </div>
+
       <!-- 9-step JO form -->
       <div class="card">
 
@@ -166,6 +185,8 @@ body{display:block!important;padding:0!important}body::after{display:none}
         <div class="progress-track"><div class="progress-fill" id="progressFill" style="width:11.1%"></div></div>
 
         <form id="jobForm">
+          <input type="hidden" name="ticketId" id="jo-ticketId">
+          <input type="hidden" name="assetId"  id="jo-assetId">
 
           <!-- S1: Customer -->
           <div class="step-content active">
@@ -215,20 +236,55 @@ body{display:block!important;padding:0!important}body::after{display:none}
 
           <!-- S3: Device -->
           <div class="step-content">
-            <div class="section-head"><div class="section-icon si-cyan">📡</div><div><h2>Device Information</h2><p>New device and replacement unit details</p></div></div>
-            <div class="divider-label">New Device</div>
-            <div class="grid-2">
-              <div class="field"><label>IMEI</label><input name="imei" placeholder="15-digit IMEI"></div>
-              <div class="field"><label>Serial Number</label><input name="serial"></div>
-              <div class="field"><label>GSM</label><input name="gsm"></div>
-              <div class="field"><label>Module</label><input name="module"></div>
+            <div class="section-head"><div class="section-icon si-cyan">📡</div><div><h2>Device Information</h2><p>Select from available inventory — only Available/Unassigned units shown</p></div></div>
+
+            <div class="divider-label">New Tracker (from Inventory)</div>
+            <div style="position:relative;margin-bottom:6px">
+              <input id="inv-imei-q" name="imei" placeholder="Search IMEI or model — type 2+ characters…"
+                style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--mono);font-size:12px;padding:9px 13px;outline:none;transition:all 0.2s"
+                onfocus="this.style.borderColor='rgba(56,217,245,0.5)'" onblur="setTimeout(()=>{this.style.borderColor='';closeInvDD('imei-dd')},200)"
+                oninput="searchIMEI(this.value)" autocomplete="off">
+              <div id="imei-dd" style="display:none;position:absolute;top:calc(100%+4px);left:0;right:0;background:var(--surface);border:1px solid var(--border-hi);border-radius:10px;max-height:220px;overflow-y:auto;z-index:200;box-shadow:0 8px 32px rgba(0,0,0,0.55)"></div>
             </div>
-            <div class="divider-label">Old Device (Replacement)</div>
+            <div id="imei-sel-banner" style="display:none;background:rgba(56,217,245,0.06);border:1px solid rgba(56,217,245,0.2);border-radius:8px;padding:9px 14px;margin-bottom:10px;font-size:12px">
+              <div style="display:flex;align-items:center;justify-content:space-between">
+                <div>
+                  <div style="color:var(--accent);font-family:var(--mono)" id="imei-sel-imei"></div>
+                  <div style="font-size:10px;color:var(--muted);margin-top:2px" id="imei-sel-detail"></div>
+                </div>
+                <button type="button" onclick="clearIMEISel()" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:12px;padding:2px 6px">✕</button>
+              </div>
+            </div>
+
             <div class="grid-2">
-              <div class="field"><label>IMEI (Old)</label><input name="oldimei" placeholder="15-digit IMEI"></div>
-              <div class="field"><label>Serial (Old)</label><input name="oldserial"></div>
-              <div class="field"><label>GSM (Old)</label><input name="oldgsm"></div>
-              <div class="field"><label>Module (Old)</label><input name="oldmodule"></div>
+              <div class="field"><label>Serial Number</label><input name="serial" id="dev-serial" placeholder="Auto-filled from inventory"></div>
+              <div class="field"><label>Module</label><input name="module" id="dev-module" placeholder="Auto-filled from inventory"></div>
+            </div>
+
+            <div class="divider-label" style="margin-top:4px">New SIM (from Inventory)</div>
+            <div style="position:relative;margin-bottom:6px">
+              <input id="inv-sim-q" name="gsm" placeholder="Search SIM number or network — type 2+ characters…"
+                style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--mono);font-size:12px;padding:9px 13px;outline:none;transition:all 0.2s"
+                onfocus="this.style.borderColor='rgba(56,217,245,0.5)'" onblur="setTimeout(()=>{this.style.borderColor='';closeInvDD('sim-dd')},200)"
+                oninput="searchSIM(this.value)" autocomplete="off">
+              <div id="sim-dd" style="display:none;position:absolute;top:calc(100%+4px);left:0;right:0;background:var(--surface);border:1px solid var(--border-hi);border-radius:10px;max-height:220px;overflow-y:auto;z-index:200;box-shadow:0 8px 32px rgba(0,0,0,0.55)"></div>
+            </div>
+            <div id="sim-sel-banner" style="display:none;background:rgba(123,111,255,0.06);border:1px solid rgba(123,111,255,0.2);border-radius:8px;padding:9px 14px;margin-bottom:10px;font-size:12px">
+              <div style="display:flex;align-items:center;justify-content:space-between">
+                <div>
+                  <div style="color:var(--accent2);font-family:var(--mono)" id="sim-sel-num"></div>
+                  <div style="font-size:10px;color:var(--muted);margin-top:2px" id="sim-sel-detail"></div>
+                </div>
+                <button type="button" onclick="clearSIMSel()" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:12px;padding:2px 6px">✕</button>
+              </div>
+            </div>
+
+            <div class="divider-label" style="margin-top:4px">Old Device (Replacement — fill if swapping)</div>
+            <div class="grid-2">
+              <div class="field"><label>IMEI (Old)</label><input name="oldimei" placeholder="Previous tracker IMEI"></div>
+              <div class="field"><label>Serial (Old)</label><input name="oldserial" placeholder="Previous serial"></div>
+              <div class="field"><label>GSM / SIM (Old)</label><input name="oldgsm" placeholder="Previous SIM number"></div>
+              <div class="field"><label>Module (Old)</label><input name="oldmodule" placeholder="Previous module"></div>
             </div>
           </div>
 

@@ -63,7 +63,7 @@
         <div class="section-head"><div class="section-icon si-purple">🕐</div><div><h2>Recent Activity</h2><p>Latest system events</p></div></div>
         <div id="activityFeed">
           <div class="activity-item"><div class="ai-dot" style="background:var(--accent)"></div><div><div class="ai-text">FleetCRM loaded successfully</div><div class="ai-time">Just now</div></div></div>
-          <div class="activity-item"><div class="ai-dot" style="background:var(--muted)"></div><div><div class="ai-text">Connect your Google Sheet to see live activity</div><div class="ai-time">—</div></div></div>
+          <div class="activity-item"><div class="ai-dot" style="background:var(--muted)"></div><div><div class="ai-text">Activity will appear here as your team creates tickets and job orders</div><div class="ai-time">—</div></div></div>
         </div>
       </div>
       <div class="card">
@@ -103,7 +103,7 @@ document.getElementById('quickActions').innerHTML = actions.slice(0,6).map(a =>
 
 async function loadStats() {
   try {
-    const leads = await crmGet({action:'getLeads',tab:'Sales Leads'});
+    const leads = await crmGet({action:'getLeads'});
     if (leads.data) {
       document.getElementById('st-leads').textContent = leads.data.length;
       const d = leads.data, max = d.length||1;
@@ -130,7 +130,7 @@ async function loadStats() {
     }).join('');
   } catch{}
   try {
-    const jobs=await crmGet({action:'getJobOrders',tab:'Job Orders'});
+    const jobs=await crmGet({action:'getJobOrders'});
     if(jobs.data) document.getElementById('st-jobs').textContent=jobs.data.length;
   } catch{}
 }

@@ -105,8 +105,8 @@ body::before{content:'';position:fixed;inset:0;
 
   <div class="login-card">
     <div class="field">
-      <label>Username</label>
-      <input type="text" id="username" placeholder="Enter username" autocomplete="username">
+      <label>Email Address</label>
+      <input type="email" id="username" placeholder="you@company.com" autocomplete="email">
     </div>
     <div class="field">
       <label>Password</label>
@@ -120,7 +120,30 @@ body::before{content:'';position:fixed;inset:0;
     <button class="login-btn" id="loginBtn" onclick="doLogin()">Sign In →</button>
     <div class="error-msg" id="errorMsg">⚠ Invalid username or password</div>
 
-  <div class="login-footer">FleetCRM v1.0 &nbsp;·&nbsp; Secure Session</div>
+    <div class="role-hints">
+      <div class="rh-label">Quick Login</div>
+      <div class="role-list">
+        <div class="role-card" onclick="quickLogin('admin@fleetcrm.local','admin123')">
+          <div class="rn">⬡ Admin</div>
+          <div class="ru">Full access</div>
+        </div>
+        <div class="role-card" onclick="quickLogin('sales@fleetcrm.local','sales123')">
+          <div class="rn">🎯 Sales</div>
+          <div class="ru">Leads only</div>
+        </div>
+        <div class="role-card" onclick="quickLogin('ops@fleetcrm.local','ops123')">
+          <div class="rn">📋 Operations</div>
+          <div class="ru">Orders + inventory</div>
+        </div>
+        <div class="role-card" onclick="quickLogin('mgmt@fleetcrm.local','mgmt123')">
+          <div class="rn">📊 Management</div>
+          <div class="ru">View only</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="login-footer">FleetCRM v1.0 &nbsp;·&nbsp; Powered by Supabase</div>
 
 </div>
 
@@ -134,30 +157,31 @@ function togglePass() {
   inp.type = inp.type === 'password' ? 'text' : 'password';
 }
 
-function quickLogin(u, p) {
-  document.getElementById('username').value = u;
+// Quick login uses full email addresses stored in Supabase Auth
+function quickLogin(email, p) {
+  document.getElementById('username').value = email;
   document.getElementById('password').value = p;
   doLogin();
 }
 
 async function doLogin() {
-  const u   = document.getElementById('username').value.trim();
-  const p   = document.getElementById('password').value;
-  const btn = document.getElementById('loginBtn');
-  const err = document.getElementById('errorMsg');
+  const email = document.getElementById('username').value.trim();
+  const p     = document.getElementById('password').value;
+  const btn   = document.getElementById('loginBtn');
+  const err   = document.getElementById('errorMsg');
 
-  if (!u || !p) { err.textContent = '⚠ Please enter username and password'; err.style.display = 'block'; return; }
+  if (!email || !p) { err.textContent = '⚠ Please enter email and password'; err.style.display = 'block'; return; }
 
   btn.disabled    = true;
   btn.textContent = 'Signing in…';
   err.style.display = 'none';
 
-  const user = await crmLogin(u, p);   // reads users.json
+  const user = await crmLogin(email, p);   // Supabase email/password auth
 
   if (user) {
     window.location.href = 'dashboard.html';
   } else {
-    err.textContent = '⚠ Invalid username or password';
+    err.textContent = '⚠ Invalid email or password';
     err.style.display = 'block';
     document.getElementById('password').classList.add('shake');
     setTimeout(() => document.getElementById('password').classList.remove('shake'), 400);

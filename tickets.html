@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tickets — FleetCRM</title>
+<script src="crm-core.js"></script>
+<script>document.head.insertAdjacentHTML('beforeend', CRM_STYLE);</script>
+<style>
+body{display:block!important;padding:0!important}body::after{display:none}
+
+/* ── Tab bar ── */
+.tab-bar{display:flex;gap:5px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:5px;margin-bottom:24px}
+.tab-btn{flex:1;padding:9px 10px;border:none;border-radius:8px;background:transparent;color:var(--muted);font-family:var(--mono);font-size:10px;letter-spacing:0.5px;text-transform:uppercase;cursor:pointer;transition:all 0.2s;text-align:center;display:flex;align-items:center;justify-content:center;gap:5px;white-space:nowrap}
+.tab-btn:hover:not(.active){color:var(--text)}
+.tab-btn.t-lead.active    {background:rgba(61,255,160,0.1); color:var(--success);border:1px solid rgba(61,255,160,0.3)}
+.tab-btn.t-query.active   {background:rgba(123,111,255,0.1);color:var(--accent2);border:1px solid rgba(123,111,255,0.3)}
+.tab-btn.t-complaint.active{background:rgba(255,95,109,0.1);color:var(--danger); border:1px solid rgba(255,95,109,0.3)}
+.tab-btn.t-list.active    {background:rgba(56,217,245,0.1); color:var(--accent); border:1px solid rgba(56,217,245,0.2)}
+.tab-panel{display:none}.tab-panel.active{display:block}
+
+/* ── Field styles ── */
+.fi{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--mono);font-size:12px;padding:9px 13px;outline:none;transition:all 0.2s;appearance:none}
+.fi:focus{border-color:rgba(56,217,245,0.45);background:rgba(56,217,245,0.02);box-shadow:0 0 0 3px rgba(56,217,245,0.06)}
+.fi::placeholder{color:var(--muted)}
+.fi-s{cursor:pointer;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath fill='%235a6070' d='M5 6L0 0h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 13px center;padding-right:34px}
+.fi-s option{background:#1a1e26}
+.fi-ro{background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--muted);font-family:var(--mono);font-size:12px;padding:9px 13px;width:100%;outline:none}
+.fi-ta{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--mono);font-size:12px;padding:9px 13px;outline:none;resize:vertical;min-height:80px;transition:all 0.2s}
+.fi-ta:focus{border-color:rgba(56,217,245,0.45);box-shadow:0 0 0 3px rgba(56,217,245,0.06)}
+.form-2{display:grid;grid-template-columns:1fr 1fr;gap:0 18px}
+.form-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0 18px}
+.span-2{grid-column:span 2}.span-3{grid-column:span 3}
+.divider-label{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);padding:12px 0 4px;display:flex;align-items:center;gap:10px;margin-bottom:4px}
+.divider-label::after{content:'';flex:1;height:1px;background:var(--border)}
+
+/* ── Customer search ── */
+.cust-wrap{position:relative}
+.cust-dd{position:absolute;top:calc(100% + 4px);left:0;right:0;background:var(--surface);border:1px solid var(--border-hi);border-radius:10px;max-height:240px;overflow-y:auto;z-index:200;box-shadow:0 8px 32px rgba(0,0,0,0.6);display:none}
+.cust-dd.open{display:block}
+.copt{padding:11px 14px;cursor:pointer;border-bottom:1px solid var(--border);transition:background 0.12s}
+.copt:last-child{border-bottom:none}.copt:hover{background:rgba(56,217,245,0.06)}
+.copt-name{font-size:12px;color:var(--text);font-weight:600}
+.copt-sub{font-size:10px;color:var(--accent2);margin-top:1px}
+.copt-meta{font-size:10px;color:var(--muted);margin-top:2px}
+.copt-id{font-size:9px;color:var(--muted2);font-family:var(--mono);margin-top:2px}
+
+/* ── Customer selected banner ── */
+.sel-ban{display:none;background:rgba(56,217,245,0.05);border:1px solid rgba(56,217,245,0.2);border-radius:10px;padding:11px 16px;margin-bottom:14px;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
+.sel-ban.on{display:flex}
+
+/* ── Asset cascade ── */
+.asset-box{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:14px}
+.asset-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
+/* ── Priority pills ── */
+.prio-row{display:flex;gap:8px;flex-wrap:wrap;padding-top:2px}
+.pp{padding:7px 16px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--muted);font-family:var(--mono);font-size:10px;cursor:pointer;transition:all 0.18s;user-select:none}
+.pp:hover{color:var(--text);border-color:var(--border-hi)}
+.pp.p-low.sel     {background:rgba(56,217,245,0.1); border-color:rgba(56,217,245,0.4); color:var(--accent)}
+.pp.p-medium.sel  {background:rgba(255,179,71,0.1);  border-color:rgba(255,179,71,0.4);  color:var(--warn)}
+.pp.p-high.sel    {background:rgba(255,95,109,0.1);  border-color:rgba(255,95,109,0.4);  color:var(--danger)}
+.pp.p-critical.sel{background:rgba(255,126,179,0.1); border-color:rgba(255,126,179,0.4); color:var(--accent3)}
+
+/* ── Card top accents ── */
+.card-lead     {border-top:2px solid rgba(61,255,160,0.6)}
+.card-query    {border-top:2px solid rgba(123,111,255,0.6)}
+.card-complaint{border-top:2px solid rgba(255,95,109,0.6)}
+
+/* ── Section heading inside card ── */
+.sec-head{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);padding:12px 0 6px;display:flex;align-items:center;gap:10px;margin-bottom:4px}
+.sec-head::after{content:'';flex:1;height:1px;background:var(--border)}
+
+/* ── Submit row ── */
+.submit-row{display:flex;gap:10px;margin-top:18px;padding-top:16px;border-top:1px solid var(--border);align-items:center}
+
+/* ── List tab ── */
+.tkt-stats{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:22px}
+.fi-f{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--mono);font-size:11px;padding:8px 10px;outline:none;transition:border-color 0.2s;appearance:none}
+.fi-f:focus{border-color:rgba(56,217,245,0.4)}.fi-f::placeholder{color:var(--muted)}
+.fi-fs{cursor:pointer;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath fill='%235a6070' d='M5 6L0 0h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:26px}
+.fi-fs option{background:#1a1e26}
+.fp{background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:14px 18px;margin-bottom:14px}
+.tkt-row{cursor:pointer;transition:background 0.12s}
+.tkt-row:hover{background:rgba(255,255,255,0.02)!important}
+.tkt-det{display:none;background:var(--surface2);border-bottom:1px solid var(--border)}
+.tkt-det.open{display:table-row}
+.det-g{display:grid;grid-template-columns:repeat(4,1fr);gap:0;border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:12px}
+.dg{padding:9px 12px;border-right:1px solid var(--border);border-bottom:1px solid var(--border)}
+.dg:nth-child(4n){border-right:none}.dg:nth-last-child(-n+4){border-bottom:none}
+.dg-l{font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:3px}
+.dg-v{font-size:12px;color:var(--text);word-break:break-word}
+.sb{display:inline-block;font-size:9px;padding:2px 8px;border-radius:4px;text-transform:uppercase;letter-spacing:0.5px;font-weight:500}
+.sb-open{background:rgba(56,217,245,0.1);color:var(--accent)}
+.sb-inprogress,.sb-in-progress{background:rgba(255,179,71,0.1);color:var(--warn)}
+.sb-resolved{background:rgba(61,255,160,0.1);color:var(--success)}
+.sb-closed{background:rgba(90,96,112,0.15);color:var(--muted)}
+.sb-lead{background:rgba(61,255,160,0.1);color:var(--success)}
+.sb-query{background:rgba(123,111,255,0.1);color:var(--accent2)}
+.sb-complaint{background:rgba(255,95,109,0.1);color:var(--danger)}
+.pg-bar{display:flex;align-items:center;justify-content:space-between;margin-top:14px;flex-wrap:wrap;gap:10px}
+.pg-btns{display:flex;gap:5px;flex-wrap:wrap}
+.pgb{padding:5px 10px;border-radius:6px;background:var(--surface2);border:1px solid var(--border);color:var(--muted);font-family:var(--mono);font-size:11px;cursor:pointer;transition:all 0.15s}
+.pgb.act{background:rgba(56,217,245,0.1);border-color:rgba(56,217,245,0.3);color:var(--accent)}
+.pgb:hover:not(:disabled){color:var(--text);border-color:var(--border-hi)}.pgb:disabled{opacity:0.3;cursor:not-allowed}
+
+@media(max-width:900px){.tkt-stats{grid-template-columns:repeat(3,1fr)}.form-2,.form-3,.asset-grid{grid-template-columns:1fr}.det-g{grid-template-columns:1fr 1fr}}
+@media(max-width:600px){.tkt-stats{grid-template-columns:1fr 1fr}.det-g{grid-template-columns:1fr}.span-2,.span-3{grid-column:span 1}}
+</style>
+</head>
+<body>
+<script>const _gu = crmGuard('tickets');</script>
+
+<div class="crm-main">
+  <div class="crm-topbar">
+    <div>
+      <div class="page-title">Tickets</div>
+      <div class="page-subtitle">Sales Lead · Query · Complaint — three separate forms, one place</div>
+    </div>
+    <div class="topbar-right">
+      <div class="topbar-time" id="clock"></div>
+      <div id="tkt-badge" style="background:var(--surface2);border:1px solid var(--border);padding:5px 12px;border-radius:6px;font-size:10px;letter-spacing:1.5px;color:var(--muted)">—</div>
+    </div>
+  </div>
+
+  <div class="crm-content fade-up">
+
+    <div class="tab-bar">
+      <button class="tab-btn t-lead active" id="ttab-lead"      onclick="switchTTab('lead',this)">🎯 New Lead</button>
+      <button class="tab-btn t-query"       id="ttab-query"     onclick="switchTTab('query',this)">💬 New Query</button>
+      <button class="tab-btn t-complaint"   id="ttab-complaint" onclick="switchTTab('complaint',this)">⚠ New Complaint</button>
+      <button class="tab-btn t-list"        id="ttab-list"      onclick="switchTTab('list',this)">📋 All Tickets</button>
+    </div>
+
+<!-- ═══════════════════════════════════════════════════
+     TAB 1 — NEW LEAD
+═══════════════════════════════════════════════════ -->
+<div class="tab-panel active" id="tpanel-lead">
+
+  <!-- Customer -->
+  <div class="card card-lead" style="margin-bottom:14px">
+    <div class="section-head">
+      <div class="section-icon si-green">👤</div>
+      <div><h2>Customer</h2><p>Every lead must be linked to a customer record</p></div>
+    </div>
+    <div class="cust-wrap">
+      <input class="fi" id="l-cust-q" placeholder="Search name, contact, company, CNIC, RAC, ID…" oninput="custSearch('l',this.value)" autocomplete="off">
+      <div class="cust-dd" id="l-cust-dd"></div>
+    </div>
+    <div class="sel-ban" id="l-sel-ban">
+      <div>
+        <div style="font-size:13px;font-weight:700;color:var(--text)" id="l-sel-name"></div>
+        <div style="font-size:11px;color:var(--muted);margin-top:2px" id="l-sel-meta"></div>
+      </div>
+      <button class="btn btn-ghost btn-sm" onclick="custClear('l')">✕ Clear</button>
+    </div>
+    <input type="hidden" id="l-custId"><input type="hidden" id="l-custName">
+    <input type="hidden" id="l-contact"><input type="hidden" id="l-city">
+    <input type="hidden" id="l-email"><input type="hidden" id="l-rac"><input type="hidden" id="l-company">
+  </div>
+
+  <!-- Lead info -->
+  <div class="card card-lead" style="margin-bottom:14px">
+    <div class="section-head">
+      <div class="section-icon si-green">🎯</div>
+      <div><h2>Lead Information</h2><p>Capture the full sales opportunity</p></div>
+    </div>
+
+    <div class="form-2">
+      <div class="field span-2">
+        <label>Lead Title / Subject *</label>
+        <input class="fi" id="l-title" placeholder="e.g. Fleet tracking for 10 vehicles — DHA Lahore">
+      </div>
+      <div class="field span-2">
+        <label>Description / Customer Requirement</label>
+        <textarea class="fi-ta" id="l-description" placeholder="Describe what the customer is looking for, any special requirements or context…" style="min-height:70px"></textarea>
+      </div>
+    </div>
+
+    <div class="sec-head">Package & Vehicles</div>
+    <div class="form-3">
+      <div class="field">
+        <label>Interested Package</label>
+        <select class="fi fi-s" id="l-package">
+          <option value="">Select…</option>
+          <option>Basic Tracker</option><option>Standard</option><option>Premium</option>
+          <option>Fleet Bundle</option><option>Enterprise / Custom</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>No. of Vehicles</label>
+        <input class="fi" id="l-vehicles" type="number" min="1" placeholder="e.g. 5">
+      </div>
+      <div class="field">
+        <label>Budget Range</label>
+        <select class="fi fi-s" id="l-budget">
+          <option value="">Select…</option>
+          <option>Under PKR 10,000</option><option>PKR 10,000 – 25,000</option>
+          <option>PKR 25,000 – 50,000</option><option>PKR 50,000 – 100,000</option>
+          <option>PKR 100,000+</option><option>To be discussed</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="sec-head">Timeline & Payment</div>
+    <div class="form-3">
+      <div class="field">
+        <label>Purchase Timeline</label>
+        <select class="fi fi-s" id="l-timeline">
+          <option value="">Select…</option>
+          <option>Immediately</option><option>Within 1 week</option>
+          <option>Within 1 month</option><option>1–3 months</option>
+          <option>3+ months</option><option>Just exploring</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Preferred Payment</label>
+        <select class="fi fi-s" id="l-payment">
+          <option value="">Select…</option>
+          <option>Cash</option><option>Bank Transfer</option>
+          <option>Cheque</option><option>Online / Mobile</option>
+          <option>Credit / Installment</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Follow-up Date</label>
+        <input type="date" class="fi" id="l-followup">
+      </div>
+    </div>
+
+    <div class="sec-head">Source & Assignment</div>
+    <div class="form-3">
+      <div class="field">
+        <label>Lead Source</label>
+        <select class="fi fi-s" id="l-source">
+          <option value="">Select…</option>
+          <option>Referral</option><option>Walk-in</option><option>WhatsApp</option>
+          <option>Social Media</option><option>Cold Call</option><option>Website</option>
+          <option>Exhibition / Event</option><option>Existing Client</option><option>Other</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Assigned Sales Person</label>
+        <input class="fi" id="l-salesperson" placeholder="Name of sales rep">
+      </div>
+      <div class="field">
+        <label>Priority</label>
+        <div class="prio-row">
+          <div class="pp p-low"      onclick="selPrio('l','Low',this)">Low</div>
+          <div class="pp p-medium"   onclick="selPrio('l','Medium',this)">Medium</div>
+          <div class="pp p-high"     onclick="selPrio('l','High',this)">High</div>
+          <div class="pp p-critical" onclick="selPrio('l','Critical',this)">🔴 Critical</div>
+        </div>
+        <input type="hidden" id="l-prio" value="Medium">
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Internal Notes</label>
+      <textarea class="fi-ta" id="l-notes" placeholder="Any internal comments, context or instructions for the sales team…" style="min-height:60px"></textarea>
+    </div>
+
+    <div class="error-banner" id="l-err"></div>
+    <div class="submit-row">
+      <button class="btn btn-solid" style="background:linear-gradient(135deg,#3dffa0,#38d9f5);color:#0a0c0f;font-weight:700" onclick="submitLead()">Submit Lead →</button>
+      <button class="btn btn-ghost" onclick="resetForm('l')">Clear Form</button>
+      <span style="font-size:10px;color:var(--muted);margin-left:auto" id="l-hint">Auto-creates a Sales Lead entry on submit</span>
+    </div>
+  </div>
+
+</div><!-- /lead -->
+
+<!-- ═══════════════════════════════════════════════════
+     TAB 2 — NEW QUERY
+═══════════════════════════════════════════════════ -->
+<div class="tab-panel" id="tpanel-query">
+
+  <!-- Customer -->
+  <div class="card card-query" style="margin-bottom:14px">
+    <div class="section-head">
+      <div class="section-icon si-purple">👤</div>
+      <div><h2>Customer</h2><p>Search and select the customer raising this query</p></div>
+    </div>
+    <div class="cust-wrap">
+      <input class="fi" id="q-cust-q" placeholder="Search name, contact, company, CNIC, RAC, ID…" oninput="custSearch('q',this.value)" autocomplete="off">
+      <div class="cust-dd" id="q-cust-dd"></div>
+    </div>
+    <div class="sel-ban" id="q-sel-ban">
+      <div>
+        <div style="font-size:13px;font-weight:700;color:var(--text)" id="q-sel-name"></div>
+        <div style="font-size:11px;color:var(--muted);margin-top:2px" id="q-sel-meta"></div>
+      </div>
+      <button class="btn btn-ghost btn-sm" onclick="custClear('q')">✕ Clear</button>
+    </div>
+    <input type="hidden" id="q-custId"><input type="hidden" id="q-custName">
+    <input type="hidden" id="q-contact"><input type="hidden" id="q-city">
+    <input type="hidden" id="q-rac"><input type="hidden" id="q-company">
+  </div>
+
+  <!-- Asset cascade -->
+  <div class="card card-query" style="margin-bottom:14px">
+    <div class="section-head">
+      <div class="section-icon si-cyan">🚗</div>
+      <div><h2>Linked Vehicle <span style="font-size:11px;color:var(--muted);font-weight:400">(optional)</span></h2>
+        <p>Select the asset this query relates to — IMEI and SIM auto-populate</p>
+      </div>
+    </div>
+    <div class="asset-box">
+      <div class="asset-grid">
+        <div class="field">
+          <label>Vehicle Asset</label>
+          <select class="fi fi-s" id="q-asset" onchange="assetCascade('q')">
+            <option value="">— Not vehicle-specific —</option>
+          </select>
+        </div>
+        <div class="field"><label>Registration No.</label><input class="fi-ro" id="q-reg" readonly placeholder="Auto-filled"></div>
+        <div class="field"><label>Tracker IMEI</label><input class="fi-ro" id="q-imei" readonly placeholder="Auto-filled"></div>
+        <div class="field"><label>SIM Number</label><input class="fi-ro" id="q-sim" readonly placeholder="Auto-filled"></div>
+      </div>
+      <div style="font-size:10px;color:var(--success);margin-top:6px" id="q-asset-hint"></div>
+    </div>
+    <input type="hidden" id="q-assetId">
+  </div>
+
+  <!-- Query details -->
+  <div class="card card-query" style="margin-bottom:14px">
+    <div class="section-head">
+      <div class="section-icon si-purple">💬</div>
+      <div><h2>Query Details</h2><p>Describe what the customer needs help with</p></div>
+    </div>
+
+    <div class="form-2">
+      <div class="field">
+        <label>Query Category *</label>
+        <select class="fi fi-s" id="q-category">
+          <option value="">Select…</option>
+          <option>Device Not Working</option><option>App / Platform Access</option>
+          <option>SIM / Network Issue</option><option>Location Inaccuracy</option>
+          <option>Alerts Not Received</option><option>Account / Billing</option>
+          <option>Installation Query</option><option>AMC / Renewal</option>
+          <option>Feature Request</option><option>General Enquiry</option><option>Other</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Priority</label>
+        <div class="prio-row">
+          <div class="pp p-low"    onclick="selPrio('q','Low',this)">Low</div>
+          <div class="pp p-medium" onclick="selPrio('q','Medium',this)">Medium</div>
+          <div class="pp p-high"   onclick="selPrio('q','High',this)">High</div>
+          <div class="pp p-critical" onclick="selPrio('q','Critical',this)">🔴 Critical</div>
+        </div>
+        <input type="hidden" id="q-prio" value="Medium">
+      </div>
+      <div class="field span-2">
+        <label>Subject / Title *</label>
+        <input class="fi" id="q-title" placeholder="Brief description of what the customer needs help with">
+      </div>
+      <div class="field span-2">
+        <label>Full Query Details *</label>
+        <textarea class="fi-ta" id="q-details" placeholder="Describe the issue or question in full. Include what the customer has already tried, error messages, device behaviour…" style="min-height:100px"></textarea>
+      </div>
+      <div class="field">
+        <label>Assigned To</label>
+        <input class="fi" id="q-assigned" placeholder="Team member or department">
+      </div>
+      <div class="field">
+        <label>Due / Resolution Date</label>
+        <input type="date" class="fi" id="q-due">
+      </div>
+    </div>
+
+    <div class="error-banner" id="q-err"></div>
+    <div class="submit-row">
+      <button class="btn btn-solid" style="background:linear-gradient(135deg,#7b6fff,#38d9f5);color:#fff;font-weight:700" onclick="submitQuery()">Submit Query →</button>
+      <button class="btn btn-ghost" onclick="resetForm('q')">Clear Form</button>
+      <span style="font-size:10px;color:var(--muted);margin-left:auto">Ticket routed to Operations for resolution</span>
+    </div>
+  </div>
+
+</div><!-- /query -->
+
+<!-- ═══════════════════════════════════════════════════
+     TAB 3 — NEW COMPLAINT
+═══════════════════════════════════════════════════ -->
+<div class="tab-panel" id="tpanel-complaint">
+
+  <!-- Customer -->
+  <div class="card card-complaint" style="margin-bottom:14px">
+    <div class="section-head">
+      <div class="section-icon si-danger">👤</div>
+      <div><h2>Customer</h2><p>Search and select the customer filing this complaint</p></div>
+    </div>
+    <div class="cust-wrap">
+      <input class="fi" id="c-cust-q" placeholder="Search name, contact, company, CNIC, RAC, ID…" oninput="custSearch('c',this.value)" autocomplete="off">
+      <div class="cust-dd" id="c-cust-dd"></div>
+    </div>
+    <div class="sel-ban" id="c-sel-ban">
+      <div>
+        <div style="font-size:13px;font-weight:700;color:var(--text)" id="c-sel-name"></div>
+        <div style="font-size:11px;color:var(--muted);margin-top:2px" id="c-sel-meta"></div>
+      </div>
+      <button class="btn btn-ghost btn-sm" onclick="custClear('c')">✕ Clear</button>
+    </div>
+    <input type="hidden" id="c-custId"><input type="hidden" id="c-custName">
+    <input type="hidden" id="c-contact"><input type="hidden" id="c-city">
+    <input type="hidden" id="c-rac"><input type="hidden" id="c-company">
+  </div>
+
+  <!-- Asset cascade -->
+  <div class="card card-complaint" style="margin-bottom:14px">
+    <div class="section-head">
+      <div class="section-icon si-cyan">🚗</div>
+      <div><h2>Affected Vehicle <span style="font-size:11px;color:var(--muted);font-weight:400">(optional)</span></h2>
+        <p>Select the vehicle this complaint relates to</p>
+      </div>
+    </div>
+    <div class="asset-box">
+      <div class="asset-grid">
+        <div class="field">
+          <label>Vehicle Asset</label>
+          <select class="fi fi-s" id="c-asset" onchange="assetCascade('c')">
+            <option value="">— Not vehicle-specific —</option>
+          </select>
+        </div>
+        <div class="field"><label>Registration No.</label><input class="fi-ro" id="c-reg" readonly placeholder="Auto-filled"></div>
+        <div class="field"><label>Tracker IMEI</label><input class="fi-ro" id="c-imei" readonly placeholder="Auto-filled"></div>
+        <div class="field"><label>SIM Number</label><input class="fi-ro" id="c-sim" readonly placeholder="Auto-filled"></div>
+      </div>
+      <div style="font-size:10px;color:var(--danger);margin-top:6px" id="c-asset-hint"></div>
+    </div>
+    <input type="hidden" id="c-assetId">
+  </div>
+
+  <!-- Complaint details -->
+  <div class="card card-complaint" style="margin-bottom:14px">
+    <div class="section-head">
+      <div class="section-icon si-danger">⚠</div>
+      <div><h2>Complaint Details</h2><p>Document clearly so operations can resolve quickly</p></div>
+    </div>
+
+    <div class="form-2">
+      <div class="field">
+        <label>Complaint Category *</label>
+        <select class="fi fi-s" id="c-category">
+          <option value="">Select…</option>
+          <option>Device Malfunction</option><option>Wrong Installation</option>
+          <option>SIM Not Working</option><option>Data Loss / History Missing</option>
+          <option>Service Not Delivered</option><option>Billing Dispute</option>
+          <option>Staff Behaviour</option><option>Response Time</option>
+          <option>Device Physically Damaged</option><option>App Not Working</option><option>Other</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Severity *</label>
+        <select class="fi fi-s" id="c-severity">
+          <option value="">Select…</option>
+          <option>Minor — Inconvenience only</option>
+          <option>Moderate — Affects daily usage</option>
+          <option>Major — Service completely down</option>
+          <option>Critical — Financial or data loss</option>
+        </select>
+      </div>
+      <div class="field span-2">
+        <label>Subject / Title *</label>
+        <input class="fi" id="c-title" placeholder="Brief description of the complaint">
+      </div>
+      <div class="field span-2">
+        <label>Full Complaint Description *</label>
+        <textarea class="fi-ta" id="c-description" placeholder="What went wrong? When did it happen? What has the customer already tried? What outcome do they expect?" style="min-height:100px"></textarea>
+      </div>
+      <div class="field">
+        <label>Incident Date</label>
+        <input type="date" class="fi" id="c-incident">
+      </div>
+      <div class="field">
+        <label>Affected Device (if no vehicle linked)</label>
+        <input class="fi" id="c-device" placeholder="IMEI number or SIM number">
+      </div>
+      <div class="field">
+        <label>Priority</label>
+        <div class="prio-row">
+          <div class="pp p-low"      onclick="selPrio('c','Low',this)">Low</div>
+          <div class="pp p-medium"   onclick="selPrio('c','Medium',this)">Medium</div>
+          <div class="pp p-high"     onclick="selPrio('c','High',this)">High</div>
+          <div class="pp p-critical" onclick="selPrio('c','Critical',this)">🔴 Critical</div>
+        </div>
+        <input type="hidden" id="c-prio" value="High">
+      </div>
+      <div class="field">
+        <label>Assigned To</label>
+        <input class="fi" id="c-assigned" placeholder="Team member or department">
+      </div>
+    </div>
+
+    <div class="error-banner" id="c-err"></div>
+    <div class="submit-row">
+      <button class="btn btn-solid" style="background:linear-gradient(135deg,#ff5f6d,#ff7eb3);color:#fff;font-weight:700" onclick="submitComplaint()">Submit Complaint →</button>
+      <button class="btn btn-ghost" onclick="resetForm('c')">Clear Form</button>
+      <span style="font-size:10px;color:var(--muted);margin-left:auto">Escalated to Operations team immediately</span>
+    </div>
+  </div>
+
+</div><!-- /complaint -->
+
+<!-- ═══════════════════════════════════════════════════
+     TAB 4 — ALL TICKETS
+═══════════════════════════════════════════════════ -->
+<div class="tab-panel" id="tpanel-list">
+
+  <div class="tkt-stats">
+    <div class="stat-tile t-cyan">   <div class="tile-label">Total</div>      <div class="tile-val" id="ts-total">—</div> <div class="tile-icon">🎫</div></div>
+    <div class="stat-tile t-green">  <div class="tile-label">Leads</div>      <div class="tile-val" id="ts-leads">—</div> <div class="tile-icon">🎯</div></div>
+    <div class="stat-tile t-purple"> <div class="tile-label">Queries</div>    <div class="tile-val" id="ts-query">—</div> <div class="tile-icon">💬</div></div>
+    <div class="stat-tile t-pink">   <div class="tile-label">Complaints</div> <div class="tile-val" id="ts-comp">—</div>  <div class="tile-icon">⚠</div></div>
+    <div class="stat-tile t-warn">   <div class="tile-label">Open</div>       <div class="tile-val" id="ts-open">—</div>  <div class="tile-icon">📬</div></div>
+  </div>
+
+  <div class="card">
+    <div class="section-head">
+      <div class="section-icon si-cyan">📋</div>
+      <div><h2>All Tickets</h2><p>Click row to expand full details · Edit to update status</p></div>
+    </div>
+
+    <div class="fp">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+        <span style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--accent)">⚙ Filters</span>
+        <div style="display:flex;gap:8px">
+          <span id="tkt-fc" style="font-size:10px;color:var(--muted)"></span>
+          <button class="btn btn-ghost btn-sm" onclick="clearTktFilters()">Clear</button>
+          <button class="btn btn-ghost btn-sm" onclick="loadTickets()">↻ Refresh</button>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:10px;margin-bottom:10px">
+        <input class="fi-f" id="tf-q" placeholder="Search customer, title, ID, vehicle, IMEI…" oninput="applyTktFilters()">
+        <select class="fi-f fi-fs" id="tf-type" onchange="applyTktFilters()">
+          <option value="">All Types</option><option>Lead</option><option>Query</option><option>Complaint</option>
+        </select>
+        <select class="fi-f fi-fs" id="tf-status" onchange="applyTktFilters()">
+          <option value="">All Status</option><option>Open</option><option>In Progress</option><option>Resolved</option><option>Closed</option>
+        </select>
+        <select class="fi-f fi-fs" id="tf-prio" onchange="applyTktFilters()">
+          <option value="">All Priority</option><option>Low</option><option>Medium</option><option>High</option><option>Critical</option>
+        </select>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
+        <input class="fi-f" id="tf-cust" placeholder="Customer name…" oninput="applyTktFilters()">
+        <input type="date" class="fi-f" id="tf-from" onchange="applyTktFilters()">
+        <input type="date" class="fi-f" id="tf-to"   onchange="applyTktFilters()">
+      </div>
+    </div>
+
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px">
+      <span id="tkt-res" style="font-size:11px;color:var(--muted)">—</span>
+      <div style="display:flex;align-items:center;gap:8px;font-size:10px;color:var(--muted)">Per page:
+        <select id="tkt-pp" onchange="tktChangePP()" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:var(--mono);font-size:11px;padding:5px 10px;outline:none;cursor:pointer">
+          <option value="10">10</option><option value="25" selected>25</option><option value="50">50</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table><thead><tr>
+        <th onclick="sortTkt('createdAt')" style="cursor:pointer">Date <span id="ts-createdAt">↓</span></th>
+        <th>ID</th>
+        <th>Type</th>
+        <th onclick="sortTkt('customerName')" style="cursor:pointer">Customer <span id="ts-customerName"></span></th>
+        <th>Subject / Title</th>
+        <th>Vehicle / Category</th>
+        <th>Priority</th>
+        <th>Status</th>
+        <th>Assigned</th>
+        <th>Actions</th>
+      </tr></thead>
+      <tbody id="tkt-tbody">
+        <tr><td colspan="10" style="text-align:center;padding:40px;color:var(--muted)">Switch to this tab to load…</td></tr>
+      </tbody></table>
+    </div>
+
+    <div class="pg-bar">
+      <div class="pg-btns" id="tkt-pgs"></div>
+      <div style="display:flex;align-items:center;gap:6px;font-size:10px;color:var(--muted)">Go to:
+        <input type="number" id="tkt-pg-inp" min="1" style="width:48px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:var(--mono);font-size:11px;padding:5px 8px;outline:none;text-align:center" onkeydown="if(event.key==='Enter')tktJumpPg()">
+        <button class="btn btn-ghost btn-sm" onclick="tktJumpPg()">Go</button>
+      </div>
+    </div>
+  </div>
+</div><!-- /list -->
+
+  </div>
+</div>
+
+<script src="tickets.js"></script>
+</body>
+</html>
