@@ -242,7 +242,7 @@ body{display:block!important;padding:0!important}body::after{display:none}
             <div style="position:relative;margin-bottom:6px">
               <input id="inv-imei-q" name="imei" placeholder="Search IMEI or model — type 2+ characters…"
                 style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--mono);font-size:12px;padding:9px 13px;outline:none;transition:all 0.2s"
-                onfocus="this.style.borderColor='rgba(56,217,245,0.5)'" onblur="setTimeout(()=>{this.style.borderColor='';closeInvDD('imei-dd')},200)"
+                onfocus="this.style.borderColor='rgba(56,217,245,0.5)'" onblur="setTimeout(()=>{this.style.borderColor='';closeInvDD('imei-dd')},320)"
                 oninput="searchIMEI(this.value)" autocomplete="off">
               <div id="imei-dd" style="display:none;position:absolute;top:calc(100%+4px);left:0;right:0;background:var(--surface);border:1px solid var(--border-hi);border-radius:10px;max-height:220px;overflow-y:auto;z-index:200;box-shadow:0 8px 32px rgba(0,0,0,0.55)"></div>
             </div>
@@ -265,7 +265,7 @@ body{display:block!important;padding:0!important}body::after{display:none}
             <div style="position:relative;margin-bottom:6px">
               <input id="inv-sim-q" name="gsm" placeholder="Search SIM number or network — type 2+ characters…"
                 style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--mono);font-size:12px;padding:9px 13px;outline:none;transition:all 0.2s"
-                onfocus="this.style.borderColor='rgba(56,217,245,0.5)'" onblur="setTimeout(()=>{this.style.borderColor='';closeInvDD('sim-dd')},200)"
+                onfocus="this.style.borderColor='rgba(56,217,245,0.5)'" onblur="setTimeout(()=>{this.style.borderColor='';closeInvDD('sim-dd')},320)"
                 oninput="searchSIM(this.value)" autocomplete="off">
               <div id="sim-dd" style="display:none;position:absolute;top:calc(100%+4px);left:0;right:0;background:var(--surface);border:1px solid var(--border-hi);border-radius:10px;max-height:220px;overflow-y:auto;z-index:200;box-shadow:0 8px 32px rgba(0,0,0,0.55)"></div>
             </div>

@@ -261,17 +261,33 @@ function closeInvDD(id) {
 }
 
 function ddRow(icon, main, sub, warn) {
-  const bg  = 'rgba(56,217,245,0.05)';
+  const bg = 'rgba(56,217,245,0.05)';
   const col = warn ? 'var(--warn)' : 'var(--muted)';
-  return '<div style="padding:10px 14px;cursor:pointer;border-bottom:1px solid var(--border);'
-    + 'display:flex;align-items:center;gap:10px;transition:background 0.12s"'
-    + ' onmouseover="this.style.background=\'' + bg + '\'"'
-    + ' onmouseout="this.style.background=\'\'">'
-    + '<div style="font-size:18px;flex-shrink:0">' + icon + '</div>'
-    + '<div>'
-    + '<div style="font-size:12px;font-family:var(--mono);color:var(--text);font-weight:600">' + main + '</div>'
-    + '<div style="font-size:10px;color:' + col + ';margin-top:2px">' + sub + '</div>'
-    + '</div></div>';
+
+  return `
+    <div style="
+      padding: 10px 14px;
+      cursor: pointer;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      transition: background 0.12s;
+    "
+    onmouseover="this.style.background='${bg}'"
+    onmouseout="this.style.background=''"
+    >
+      <div style="font-size: 18px; flex-shrink: 0;">${icon}</div>
+      <div>
+        <div style="font-size: 12px; font-family: var(--mono); color: var(--text); font-weight: 600;">
+          ${main}
+        </div>
+        <div style="font-size: 10px; color: ${col}; margin-top: 2px;">
+          ${sub}
+        </div>
+      </div>
+    </div>
+  `;
 }
 
 function searchIMEI(q) {
@@ -324,10 +340,21 @@ function pickIMEI(i) {
 }
 
 function clearIMEISel() {
-  document.getElementById('inv-imei-q').value = '';
+  const inp = document.getElementById('inv-imei-q');
+  inp.value = '';
   document.getElementById('imei-sel-banner').style.display = 'none';
-  document.getElementById('dev-serial').value = '';
-  document.getElementById('dev-module').value = '';
+  document.getElementById('imei-dd').style.display = 'none';
+  // Clear stale hits so next search starts fresh
+  const dd = document.getElementById('imei-dd');
+  dd._hits = [];
+  dd.innerHTML = '';
+  // Clear auto-filled fields
+  const serial = document.getElementById('dev-serial');
+  const module = document.getElementById('dev-module');
+  if (serial) serial.value = '';
+  if (module) module.value = '';
+  // Re-focus so user can type immediately
+  inp.focus();
 }
 
 function searchSIM(q) {
@@ -374,8 +401,14 @@ function pickSIM(i) {
 }
 
 function clearSIMSel() {
-  document.getElementById('inv-sim-q').value = '';
+  const inp = document.getElementById('inv-sim-q');
+  inp.value = '';
   document.getElementById('sim-sel-banner').style.display = 'none';
+  const dd = document.getElementById('sim-dd');
+  dd.style.display = 'none';
+  dd._hits = [];
+  dd.innerHTML = '';
+  inp.focus();
 }
 
 let lastSubmittedData = {};
@@ -390,6 +423,13 @@ async function submitJO() {
     return;
   }
   const form = document.getElementById('jobForm');
+
+  // Auto-fill invoiceNumber from the badge if user left it blank
+  const invInput = form.querySelector('[name="invoiceNumber"]');
+  if (invInput && !invInput.value.trim()) {
+    invInput.value = document.getElementById('joIdBadge').textContent.trim();
+  }
+
   const data = Object.fromEntries(new FormData(form).entries());
   data.action   = 'submitJobOrder';
   data.sheetTab = 'Job Orders';
