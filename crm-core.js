@@ -670,7 +670,7 @@ function crmNav(activePage) {
     { id:'tickets',   href:'tickets.html',    icon:'🎫', label:'Tickets'    },
     { id:'jolist',    href:'job_orders.html', icon:'📋', label:'Job Orders' },
     { id:'assets',    href:'assets.html',     icon:'🚗', label:'Assets'     },
-    { id:'leads',     href:'leads.html',      icon:'🎯', label:'Sales Leads'},
+    { id:'leads',     href:'Leads.html',      icon:'🎯', label:'Sales Leads'},
     { id:'inventory', href:'inventory.html',  icon:'📦', label:'Inventory'  },
     { id:'users',     href:'users.html',      icon:'👥', label:'Users'      },
   ];
